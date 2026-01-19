@@ -1,0 +1,250 @@
+local sim = ac.getSim()
+local selectedCar = nil ---@type ac.StateCar
+local selectedCarIndex = nil
+local teleportMode = 1 -- 1 = Instant Teleport, 2 = Safe Teleport (Same Speed)
+local disabledCollision = false
+local teleportTimer = 0
+local collisionDuration = 10 -- 10 seconds no collision after teleport
+local isCollisionDisabled = false
+local collisionDisabledTime = 0
+
+
+
+local function TeleportHUD()
+  -- ═══════════════════════════════════════════════════════════
+  -- HEADER
+  -- ═══════════════════════════════════════════════════════════
+  ui.pushFont(ui.Font.Title)
+  ui.text('Teleport System')
+  ui.popFont()
+  
+  ui.pushFont(ui.Font.Small)
+  ui.textColored('Player Teleport', rgbm(0.6, 0.6, 0.7, 1))
+  ui.popFont()
+  
+  ui.offsetCursorY(15)
+  ui.separator()
+  ui.offsetCursorY(10)
+  
+  -- ═══════════════════════════════════════════════════════════
+  -- PLAYER LIST
+  -- ═══════════════════════════════════════════════════════════
+  ui.pushFont(ui.Font.Main)
+  ui.text('PLAYER LIST')
+  ui.popFont()
+  
+  ui.offsetCursorY(8)
+  
+  -- Collect all players
+  local players = {}
+  for i = 1, sim.carsCount - 1 do
+    local car = ac.getCar(i)
+    local driverName = ac.getDriverName(i)
+    
+    if car.isConnected and not car.isAIControlled and not string.find(driverName, Traaaffic) then
+      table.insert(players, {index = i, name = driverName, car = car})
+    end
+  end
+  
+  -- Draw player grid
+  ui.beginGroup()
+  local cols = 6
+  local buttonWidth = 80
+  local buttonHeight = 30
+  local spacing = 5
+  
+  for idx, player in ipairs(players) do
+    local col = (idx - 1) % cols
+    local row = math.floor((idx - 1)  cols)
+    
+    if col  0 then
+      ui.sameLine(0, spacing)
+    end
+    
+    local isSelected = selectedCarIndex == player.index
+    
+    if isSelected then
+      ui.pushStyleColor(ui.StyleColor.Button, rgbm(0.2, 0.5, 0.9, 1))
+      ui.pushStyleColor(ui.StyleColor.ButtonHovered, rgbm(0.3, 0.6, 1, 1))
+      ui.pushStyleColor(ui.StyleColor.ButtonActive, rgbm(0.15, 0.45, 0.85, 1))
+    else
+      ui.pushStyleColor(ui.StyleColor.Button, rgbm(0.15, 0.15, 0.2, 1))
+      ui.pushStyleColor(ui.StyleColor.ButtonHovered, rgbm(0.2, 0.2, 0.3, 1))
+      ui.pushStyleColor(ui.StyleColor.ButtonActive, rgbm(0.25, 0.25, 0.35, 1))
+    end
+    
+    -- اختصار الاسم إذا كان طويل
+    local displayName = player.name
+    if #displayName  9 then
+      displayName = string.sub(displayName, 1, 8) .. '..'
+    end
+    
+    if ui.button(displayName, vec2(buttonWidth, buttonHeight)) then
+      selectedCar = player.car
+      selectedCarIndex = player.index
+    end
+    
+    ui.popStyleColor(3)
+  end
+  ui.endGroup()
+  
+  if #players == 0 then
+    ui.textColored('No players found', rgbm(0.7, 0.3, 0.3, 1))
+  end
+  
+  ui.offsetCursorY(15)
+  ui.separator()
+  ui.offsetCursorY(10)
+  
+  -- ═══════════════════════════════════════════════════════════
+  -- TELEPORT MODE
+  -- ═══════════════════════════════════════════════════════════
+  ui.pushFont(ui.Font.Main)
+  ui.text('TELEPORT MODE')
+  ui.popFont()
+  
+  ui.offsetCursorY(5)
+  
+  ui.pushStyleColor(ui.StyleColor.CheckMark, rgbm(0.3, 0.8, 1, 1))
+  
+  if ui.radioButton('[ Instant Teleport ]', teleportMode == 1) then
+    teleportMode = 1
+  end
+  
+  ui.offsetCursorY(5)
+  
+  if ui.radioButton('[ Safe Teleport (Same Speed) ]', teleportMode == 2) then
+    teleportMode = 2
+  end
+  
+  ui.popStyleColor()
+  
+  ui.offsetCursorY(10)
+  ui.separator()
+  ui.offsetCursorY(10)
+  
+  -- ═══════════════════════════════════════════════════════════
+  -- STATUS
+  -- ═══════════════════════════════════════════════════════════
+  ui.pushFont(ui.Font.Main)
+  ui.text('STATUS')
+  ui.popFont()
+  
+  ui.offsetCursorY(5)
+  
+  if not selectedCar then
+    ui.textColored('No Player Selected', rgbm(0.8, 0.5, 0.3, 1))
+  else
+    local playerName = ac.getDriverName(selectedCarIndex)
+    ui.textColored('Selected ' .. playerName, rgbm(0.3, 1, 0.3, 1))
+    
+    -- عرض سرعة اللاعب المختار
+    local speed = selectedCar.speedKmh
+    local speedColor = rgbm(0.5, 0.8, 1, 1)
+    
+    if speed  200 then
+      speedColor = rgbm(1, 0.3, 0.3, 1) -- أحمر للسرعة العالية
+    elseif speed  100 then
+      speedColor = rgbm(1, 0.8, 0.3, 1) -- برتقالي للسرعة المتوسطة
+    else
+      speedColor = rgbm(0.5, 1, 0.5, 1) -- أخضر للسرعة المنخفضة
+    end
+    
+    ui.textColored(string.format('Speed %d kmh', math.floor(speed)), speedColor)
+  end
+  
+  ui.offsetCursorY(5)
+  
+  if isCollisionDisabled then
+    local timeLeft = math.max(0, 10 - (os.clock() - collisionDisabledTime))
+    if timeLeft  0 then
+      ui.textColored(string.format('Collision Disabled (%d Seconds)', math.ceil(timeLeft)), rgbm(1, 0.9, 0.3, 1))
+    else
+      isCollisionDisabled = false
+      ui.textColored('Collision Disabled (10 Seconds)', rgbm(0.5, 0.5, 0.5, 1))
+    end
+  else
+    ui.textColored('Collision Disabled (10 Seconds)', rgbm(0.5, 0.5, 0.5, 1))
+  end
+end
+
+local function TeleportHUDClosed(okClicked)
+  if okClicked and selectedCar then
+    local dir = selectedCar.look
+    
+    -- Calculate spawn position (8 meters behind selected car)
+    local spawnPos = selectedCar.position + vec3(0, 0.1, 0) - dir  8
+    
+    if teleportMode == 1 then
+      -- Instant teleport reset velocity
+      physics.setCarVelocity(0, vec3(0, 0, 0))
+      physics.setCarPosition(0, spawnPos, -dir)
+    else
+      -- Safe teleport maintain target's velocity
+      local targetVelocity = selectedCar.velocity
+      physics.setCarPosition(0, spawnPos, -dir)
+      physics.setCarVelocity(0, targetVelocity)
+    end
+    
+    -- Disable collisions
+    if physics.disableCarCollisions ~= nil then
+      physics.disableCarCollisions(0, true)
+      disabledCollision = true
+      isCollisionDisabled = true
+      collisionDisabledTime = os.clock()
+      teleportTimer = 0
+      ac.log([TeleportToPlayer] Collisions disabled for 10 seconds)
+    end
+
+    -- Reset selection
+    selectedCar = nil
+    selectedCarIndex = nil
+  end
+end
+
+-- ═══════════════════════════════════════════════════════════
+-- UPDATE FUNCTION (خارج كل الـ functions!)
+-- ═══════════════════════════════════════════════════════════
+function script.update(dt)
+  if disabledCollision then
+    teleportTimer = teleportTimer + dt
+
+    if teleportTimer = collisionDuration then
+      local tooClose = false
+      local playerCar = ac.getCar(0)
+
+      -- Check distance to all connected cars
+      for i = 1, sim.carsCount - 1 do
+        local otherCar = ac.getCar(i)
+        if otherCar.isConnected then
+          local distance = playerCar.positiondistance(otherCar.position)
+          if distance  10 then
+            tooClose = true
+            teleportTimer = teleportTimer - 1
+            break
+          end
+        end
+      end
+
+      -- Re-enable collision if safe
+      if not tooClose then
+        if physics.disableCarCollisions ~= nil then
+          physics.disableCarCollisions(0, false)
+          disabledCollision = false
+          isCollisionDisabled = false
+          ac.log([TeleportToPlayer] Collisions re-enabled)
+        end
+      end
+    end
+  end
+end
+
+-- Register the online extra
+ui.registerOnlineExtra(
+  ui.Icons.FastForward, 
+  'Teleport Player', 
+  nil, 
+  TeleportHUD, 
+  TeleportHUDClosed,
+  ui.OnlineExtraFlags.Admin
+)
