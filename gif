@@ -17,7 +17,7 @@ local imageHeight = 200
 local imageLoading = true
 
 -- ضع رابط الصورة هنا (يفضل PNG أو JPG)
-local imageUrl = 'https://i.imgur.com/YourImage.png'
+local imageUrl = 'https://g.top4top.io/p_367151kwf1.png'
 
 -- تحميل الصورة
 web.loadRemoteImage(imageUrl, vec2(imageWidth, imageHeight), function(err, img)
