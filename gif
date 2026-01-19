@@ -139,6 +139,7 @@ local function TeleportHUD()
     ui.pushDWriteFont('Arial')
     ui.dwriteDrawText('لا يوجد لاعبين', 14, vec2(10, ui.getCursorY()), rgbm(0.7, 0.3, 0.3, 1))
     ui.popDWriteFont()
+    ui.offsetCursorY(20)
   end
   
   ui.offsetCursorY(15)
