@@ -67,25 +67,26 @@ local function TeleportHUD()
   end
   
   -- ═══════════════════════════════════════════════════════════
-  -- النص العربي (يظهر دائماً حتى لو الصورة ما حُملت)
-  -- ═══════════════════════════════════════════════════════════
-  local availableWidth = ui.availableSpaceX()
-  local arabicMessage = arabicText("مرحباً بك في نظام الانتقال السريع")
-  
-  ui.pushFont(ui.Font.Title)
-  local textWidth = ui.measureText(arabicMessage).x
-  ui.setCursorX((availableWidth - textWidth) / 2)
-  ui.textColored(arabicMessage, rgbm(0.3, 0.8, 1, 1))
-  ui.popFont()
-  
-  ui.offsetCursorY(10)
-  
-  -- ═══════════════════════════════════════════════════════════
   -- HEADER
   -- ═══════════════════════════════════════════════════════════
   ui.pushFont(ui.Font.Title)
   ui.text('Teleport System')
   ui.popFont()
+  
+  -- ═══════════════════════════════════════════════════════════
+  -- النص العربي بدون عكس باستخدام DWrite
+  -- ═══════════════════════════════════════════════════════════
+  local availableWidth = ui.availableSpaceX()
+  local arabicMessage = "مرحباً بك في نظام الانتقال السريع" -- ✅ اكتب عادي بدون عكس!
+  
+  ui.pushDWriteFont('Segoe UI')
+  ui.beginOutline()
+  local textSize = ui.measureDWriteText(arabicMessage, 18)
+  ui.dwriteDrawText(arabicMessage, 18, vec2((availableWidth - textSize.x) / 2, ui.getCursorY()), rgbm(1, 0.8, 0.3, 1))
+  ui.endOutline(rgbm(0, 0, 0, 1), 0.5)
+  ui.popDWriteFont()
+  
+  ui.offsetCursorY(25)
   
   ui.pushFont(ui.Font.Small)
   ui.textColored('Player Teleport', rgbm(0.6, 0.6, 0.7, 1))
