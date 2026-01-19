@@ -14,35 +14,20 @@ local collisionDisabledTime = 0
 local animatedImage = nil
 local imageWidth = 400
 local imageHeight = 200
-local imageLoaded = false
 
 -- ضع رابط الصورة المتحركة هنا (GIF)
-local imageUrl = 'https://media2.giphy.com/media/v1.Y2lkPTc5MGI3NjExZGx1Zm9sdGNpcXRyY2Jza3oyd2VzbjI0YnduenlxeDFlNGQ4NmkxZiZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/jM6nZYXVqZA3jvZNGX/giphy.gif'
--- يمكنك تغيير الرابط إلى أي صورة متحركة تريدها
+local imageUrl = 'https://i.giphy.com/media/v1.Y2lkPTc5MGI3NjExcjBxN2E4ZWJ4ZzBvNXJ6aXJ6c2E4MXN4ZGJ5YzBvOXJ6aXJ6c2E4MSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/3oEjI6SIIHBdRxXI40/giphy.gif'
 
 -- تحميل الصورة من الرابط
-local function loadAnimatedImage()
-  if not imageLoaded then
-    web.loadRemoteImage(imageUrl, vec2(imageWidth, imageHeight), function(err, result)
-      if err then
-        ac.log('[Teleport] فشل تحميل الصورة: ' .. tostring(err))
-      else
-        animatedImage = result
-        imageLoaded = true
-        ac.log('[Teleport] تم تحميل الصورة بنجاح!')
-      end
-    end)
-  end
+if not animatedImage then
+  animatedImage = ui.OnlineImage(imageUrl, vec2(imageWidth, imageHeight))
 end
 
 local function TeleportHUD()
-  -- تحميل الصورة عند أول مرة
-  loadAnimatedImage()
-  
   -- ═══════════════════════════════════════════════════════════
   -- ANIMATED IMAGE SECTION
   -- ═══════════════════════════════════════════════════════════
-  if animatedImage then
+  if animatedImage and animatedImage:ready() then
     -- حساب المركز
     local availableWidth = ui.availableSpaceX()
     local centerX = (availableWidth - imageWidth) / 2
@@ -71,10 +56,21 @@ local function TeleportHUD()
     ui.image(animatedImage, vec2(imageWidth, imageHeight))
     
     ui.offsetCursorY(15)
-  else
-    -- رسالة تحميل
+  elseif animatedImage and animatedImage:failed() then
+    -- رسالة خطأ
     ui.pushFont(ui.Font.Small)
-    local loadingText = 'Loading animation...'
+    local errorText = '✗ Failed to load image'
+    local textWidth = ui.measureText(errorText).x
+    local availableWidth = ui.availableSpaceX()
+    ui.setCursorX((availableWidth - textWidth) / 2)
+    ui.textColored(errorText, rgbm(1, 0.3, 0.3, 1))
+    ui.popFont()
+    ui.offsetCursorY(10)
+  else
+    -- رسالة تحميل مع أنيميشن
+    ui.pushFont(ui.Font.Small)
+    local dots = string.rep('.', (math.floor(os.clock() * 2) % 4))
+    local loadingText = 'Loading animation' .. dots
     local textWidth = ui.measureText(loadingText).x
     local availableWidth = ui.availableSpaceX()
     ui.setCursorX((availableWidth - textWidth) / 2)
@@ -321,5 +317,5 @@ ui.registerOnlineExtra(
   nil, 
   TeleportHUD, 
   TeleportHUDClosed,
-  ui.OnlineExtraFlags.None
+  ui.OnlineExtraFlags.Admin
 )
