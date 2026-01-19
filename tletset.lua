@@ -1,74 +1,108 @@
 local sim = ac.getSim()
-local counter = 0
-local delayTime = 8.0
-local lastPress = -delayTime
-local disabledCollision = false
-local teleportTimer = 0
-local collisionDuration = 10 -- 10 seconds no collision after teleport
+local targetPos = vec2(0.5, 0.5)
+local mapScale = 1
+local _mapOffset = vec2(0, 0)
 
-function script.update(dt)
-    counter = counter + dt
-    ac.log("Counter: " .. counter)
-    
-    local campossdir = ac.getCameraForward()
-    local camposs = ac.getCameraPosition()
-    
-    -- ═══════════════════════════════════════════════════════════
-    -- التليبورت بالكاميرا
-    -- ═══════════════════════════════════════════════════════════
-    if ac.isKeyDown(9) and counter < delayTime then
-        return
-    end
-    
-    if ac.isKeyDown(9) and counter >= delayTime then
-        -- تليبورت السيارة لموقع الكاميرا
-        physics.setCarPosition(0, camposs, -campossdir)
-        physics.setCarVelocity(0, vec3(0, 0, 0)) -- إيقاف السرعة
-        
-        -- تفعيل نظام تعطيل التصادم
-        if physics.disableCarCollisions ~= nil then
-            physics.disableCarCollisions(0, true)
-            disabledCollision = true
-            teleportTimer = 0
-            ac.log("[CameraTeleport] Collisions disabled for 10 seconds")
-        end
-        
-        counter = 0
-        lastPress = counter
-    end
-    
-    -- ═══════════════════════════════════════════════════════════
-    -- نظام إعادة تفعيل التصادم
-    -- ═══════════════════════════════════════════════════════════
-    if disabledCollision then
-        teleportTimer = teleportTimer + dt
-        
-        if teleportTimer >= collisionDuration then
-            local tooClose = false
-            local playerCar = ac.getCar(0)
-            
-            -- فحص المسافة من السيارات الأخرى
-            for i = 1, sim.carsCount - 1 do
-                local otherCar = ac.getCar(i)
-                if otherCar.isConnected then
-                    local distance = playerCar.position:distance(otherCar.position)
-                    if distance < 10 then
-                        tooClose = true
-                        teleportTimer = teleportTimer - 1 -- تأخير ثانية إضافية
-                        ac.log("[CameraTeleport] Too close to other cars, delaying collision enable")
-                        break
-                    end
-                end
-            end
-            
-            -- إعادة تفعيل التصادم إذا كانت المسافة آمنة
-            if not tooClose then
-                if physics.disableCarCollisions ~= nil then
-                    physics.disableCarCollisions(0, false)
-                    disabledCollision = false
-                    ac.log("[CameraTeleport] Collisions re-enabled")
-                end
-            end
-        end
-    end
+local trackFolder = ac.getFolder(ac.FolderID.ContentTracks)..'/'..ac.getTrackFullID('/')
+local mapFilename = trackFolder..'/map.png'
+local imageSize = ui.imageSize(mapFilename) or vec2(1024, 1024)
+
+local mapParams = ac.INIConfig.load(trackFolder..'/data/map.ini'):mapSection('PARAMETERS', {
+  X_OFFSET = 0,
+  Z_OFFSET = 0,
+  SCALE_FACTOR = 1,
+  WIDTH = 600,
+  HEIGHT = 600
+})
+
+local mapSize = vec2(mapParams.WIDTH / mapParams.HEIGHT * 1000, 1000)
+
+local function DrawCar(pos, color, text)
+  ui.drawCircleFilled(pos, 3, color)
+  ui.drawText(text, pos + vec2(0, -3), color)
 end
+
+local function UiPosToWorldPos(drawOrigin, uiPos)
+  local p = (uiPos - drawOrigin) / mapSize
+  local worldPosX = (p.x * mapParams.WIDTH * mapParams.SCALE_FACTOR) - mapParams.X_OFFSET
+  local worldPosY = (p.y * mapParams.HEIGHT * mapParams.SCALE_FACTOR) - mapParams.Z_OFFSET
+  return vec2(worldPosX, worldPosY)
+end
+
+local function WorldPosToUiPos(drawOrigin, worldPos)
+  local relPosX = (worldPos.x + mapParams.X_OFFSET) / mapParams.WIDTH / mapParams.SCALE_FACTOR
+  local relPosY = (worldPos.z + mapParams.Z_OFFSET) / mapParams.HEIGHT / mapParams.SCALE_FACTOR
+  return drawOrigin + vec2(relPosX, relPosY) * mapSize
+end
+
+local function FixWorldPosHeight(worldPos)
+  local trackPos = ac.worldCoordinateToTrack(worldPos)
+  trackPos.y = 10
+  return ac.trackCoordinateToWorld(trackPos)
+end
+
+local function TeleportHUD()
+  if ui.windowHovered() and ac.getUI().mouseWheel ~= 0 then
+    local oldScale = mapScale
+    mapScale = mapScale * (1 + ac.getUI().mouseWheel * 0.05)
+    mapScale = math.max(0.4, math.min(2, mapScale))
+    local scaleFactor = mapScale / oldScale
+    local center = ui.mouseLocalPos()
+    _mapOffset = (_mapOffset - center) * scaleFactor + center
+    mapSize = imageSize * mapScale
+  end
+
+  ui.text('Select point on a map:')
+
+  if ui.mouseDown() and ui.windowHovered() then
+    _mapOffset = _mapOffset - ui.mouseDelta()
+    local maxOffsetX = mapSize.x - 100
+    local maxOffsetY = mapSize.y - 100
+    _mapOffset.x = math.max(-maxOffsetX, math.min(maxOffsetX, _mapOffset.x))
+    _mapOffset.y = math.max(-maxOffsetY, math.min(maxOffsetY, _mapOffset.y))
+  end
+
+  local drawOrigin = ui.getCursor()
+  mapSize = imageSize * mapScale
+
+  ui.drawImage(mapFilename, drawOrigin + _mapOffset, drawOrigin + mapSize + _mapOffset)
+
+  for i = 0, sim.carsCount - 1 do
+    local car = ac.getCar(i)
+    local driverName = ac.getDriverName(i)
+    if car.isConnected and not car.isAIControlled and not string.find(driverName, "Traffic") then
+      local color = i == 0 and rgbm.colors.red or rgbm.colors.blue
+      DrawCar(WorldPosToUiPos(drawOrigin + _mapOffset, car.position), color, driverName)
+    end
+  end
+
+  ui.dummy(mapSize + vec2(1, 0))
+
+  if ui.itemClicked() then
+    local mousePos = ui.mouseLocalPos()
+    targetPos = UiPosToWorldPos(drawOrigin + _mapOffset, mousePos)
+  end
+
+  ui.drawCircleFilled(WorldPosToUiPos(drawOrigin + _mapOffset, vec3(targetPos.x, 0, targetPos.y)), 4, rgbm.colors.green)
+end
+
+local function TeleportHUDClosed(okClicked)
+  if not okClicked then return end
+
+  physics.setCarVelocity(0, vec3(0, 0, 0))
+
+  if ac.hasTrackSpline() then
+    local finalPos = FixWorldPosHeight(vec3(targetPos.x, 0, targetPos.y))
+    physics.setCarPosition(0, finalPos, vec3(1, 0, 0))
+  else
+    local finalPos = vec3(targetPos.x, 5000, targetPos.y)
+    local point = vec3(0, 0, 0)
+    if physics.raycastTrack(finalPos, vec3(0, -1, 0), 10000, point, nil) > -1 then
+      physics.setCarPosition(0, point + vec3(0, 1, 0), vec3(1, 0, 0))
+    else
+      ac.setMessage('Error', 'Failed to determine y coordinate of track.')
+    end
+  end
+end
+
+ui.registerOnlineExtra(ui.Icons.Compass, 'Teleport', nil, TeleportHUD, TeleportHUDClosed, ui.OnlineExtraFlags.None)
