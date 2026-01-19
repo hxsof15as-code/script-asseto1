@@ -246,5 +246,6 @@ ui.registerOnlineExtra(
   nil, 
   TeleportHUD, 
   TeleportHUDClosed,
-  ui.OnlineExtraFlags.Admin
+  ui.OnlineExtraFlags.None
+
 )
