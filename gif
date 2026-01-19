@@ -268,7 +268,7 @@ end
 -- Register the online extra
 ui.registerOnlineExtra(
   ui.Icons.FastForward, 
-  '', 
+  Teleport, 
   nil, 
   TeleportHUD, 
   TeleportHUDClosed,
