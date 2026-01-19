@@ -132,26 +132,36 @@ local function TeleportHUD()
   ui.offsetCursorY(25)
   
   ui.pushStyleColor(ui.StyleColor.CheckMark, rgbm(0.3, 0.8, 1, 1))
+  ui.pushStyleColor(ui.StyleColor.FrameBg, rgbm(0.2, 0.2, 0.25, 1))
+  ui.pushStyleColor(ui.StyleColor.FrameBgHovered, rgbm(0.25, 0.25, 0.3, 1))
   
-  ui.pushDWriteFont('Arial')
-  if ui.radioButton('##teleport1', teleportMode == 1) then
+  -- خيار انتقال فوري
+  ui.beginGroup()
+  if ui.radioButton('##instant', teleportMode == 1) then
     teleportMode = 1
   end
-  ui.sameLine(0, 8)
-  ui.dwriteDrawText('انتقال فوري', 15, vec2(ui.getCursorX(), ui.getCursorY() - 18), rgbm(1, 1, 1, 1))
-  ui.popDWriteFont()
-  
-  ui.offsetCursorY(10)
-  
+  ui.sameLine(0, 10)
   ui.pushDWriteFont('Arial')
-  if ui.radioButton('##teleport2', teleportMode == 2) then
+  ui.setCursorY(ui.getCursorY() + 2)
+  ui.dwriteDrawText('انتقال فوري', 15, vec2(ui.getCursorX(), ui.getCursorY()), rgbm(1, 1, 1, 1))
+  ui.popDWriteFont()
+  ui.endGroup()
+  
+  ui.dummy(vec2(0, 8))
+  
+  -- خيار انتقال آمن
+  ui.beginGroup()
+  if ui.radioButton('##safe', teleportMode == 2) then
     teleportMode = 2
   end
-  ui.sameLine(0, 8)
-  ui.dwriteDrawText('انتقال آمن (نفس السرعة)', 15, vec2(ui.getCursorX(), ui.getCursorY() - 18), rgbm(1, 1, 1, 1))
+  ui.sameLine(0, 10)
+  ui.pushDWriteFont('Arial')
+  ui.setCursorY(ui.getCursorY() + 2)
+  ui.dwriteDrawText('انتقال آمن (نفس السرعة)', 15, vec2(ui.getCursorX(), ui.getCursorY()), rgbm(1, 1, 1, 1))
   ui.popDWriteFont()
+  ui.endGroup()
   
-  ui.popStyleColor()
+  ui.popStyleColor(3)
   
   ui.offsetCursorY(20)
   ui.separator()
