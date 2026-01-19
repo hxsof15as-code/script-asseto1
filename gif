@@ -11,8 +11,8 @@ local collisionDisabledTime = 0
 local bannerImage = nil
 local imageLoading = false
 local imageLoaded = false
-local imageWidth = 350
-local imageHeight = 130
+local imageWidth = 450
+local imageHeight = 180
 local imageUrl = 'https://g.top4top.io/p_367151kwf1.png'
 
 if not imageLoading and not imageLoaded then
@@ -36,31 +36,32 @@ if not imageLoading and not imageLoaded then
 end
 
 local function TeleportHUD()
-  ui.dummy(vec2(450, 0))
+  -- إجبار عرض النافذة
+  local windowWidth = 500
+  ui.pushItemWidth(windowWidth)
   
   if bannerImage then
-    local availableWidth = ui.availableSpaceX()
-    local centerX = (availableWidth - imageWidth) / 2
-    ui.setCursorX(centerX)
+    ui.setCursorX((windowWidth - imageWidth) / 2)
     ui.image(bannerImage, vec2(imageWidth, imageHeight))
-    ui.offsetCursorY(20)
+    ui.offsetCursorY(15)
   end
   
-  local availableWidth = ui.availableSpaceX()
   ui.pushDWriteFont('Arial;Weight=Bold')
   ui.beginOutline()
   local titleText = "نظام الانتقال إلى اللاعبين"
-  local titleSize = ui.measureDWriteText(titleText, 22)
-  ui.dwriteDrawText(titleText, 22, vec2((availableWidth - titleSize.x) / 2, ui.getCursorY()), rgbm(1, 1, 1, 1))
+  local titleSize = ui.measureDWriteText(titleText, 24)
+  ui.dwriteDrawText(titleText, 24, vec2((windowWidth - titleSize.x) / 2, ui.getCursorY()), rgbm(1, 1, 1, 1))
   ui.endOutline(rgbm(0, 0, 0, 1), 0.8)
   ui.popDWriteFont()
   
-  ui.offsetCursorY(30)
+  ui.offsetCursorY(35)
+  ui.separator()
+  ui.offsetCursorY(25)
   
   ui.pushDWriteFont('Arial;Weight=Bold')
-  ui.dwriteDrawText('اختر السيارة للانتقال إليها:', 15, vec2(20, ui.getCursorY()), rgbm(0.9, 0.9, 0.9, 1))
+  ui.dwriteDrawText('اختر السيارة للانتقال إليها:', 16, vec2(30, ui.getCursorY()), rgbm(0.9, 0.9, 0.9, 1))
   ui.popDWriteFont()
-  ui.offsetCursorY(25)
+  ui.offsetCursorY(30)
   
   local players = {}
   for i = 1, sim.carsCount - 1 do
@@ -71,58 +72,62 @@ local function TeleportHUD()
     end
   end
   
-  ui.pushDWriteFont('Consolas;Weight=Bold')
+  ui.pushDWriteFont('Arial;Weight=Bold')
+  ui.pushStyleVar(ui.StyleVar.ItemSpacing, vec2(0, 0))
+  
   if #players == 0 then
-    ui.dwriteDrawText('لم يتم اختيار لاعب', 14, vec2(25, ui.getCursorY()), rgbm(0.7, 0.4, 0.3, 1))
-    ui.offsetCursorY(30)
+    ui.dwriteDrawText('لم يتم اختيار لاعب', 14, vec2(35, ui.getCursorY()), rgbm(0.7, 0.4, 0.3, 1))
+    ui.offsetCursorY(20)
   else
     for idx, player in ipairs(players) do
       local isSelected = selectedCarIndex == player.index
       local cursorY = ui.getCursorY()
       
-      local rowHeight = 32
-      local rowWidth = ui.availableSpaceX() - 40
+      local rowWidth = windowWidth - 60
       
       if isSelected then
         ui.drawRectFilled(
-          vec2(20, cursorY - 2), 
-          vec2(rowWidth + 20, cursorY + rowHeight - 2), 
+          vec2(30, cursorY), 
+          vec2(rowWidth + 30, cursorY + 18), 
           rgbm(0.15, 0.45, 0.75, 0.5), 
-          4
+          2
         )
       end
       
-      local textColor = isSelected and rgbm(0.2, 0.7, 1, 1) or rgbm(0.9, 0.9, 0.9, 1)
-      ui.dwriteDrawText(player.name, 15, vec2(30, cursorY + 8), textColor)
+      local textColor = isSelected and rgbm(0.2, 0.7, 1, 1) or rgbm(0.95, 0.95, 0.95, 1)
+      ui.dwriteDrawText(player.name, 14, vec2(40, cursorY + 1), textColor)
       
-      ui.setCursor(vec2(20, cursorY))
-      ui.invisibleButton('player_' .. idx, vec2(rowWidth, rowHeight))
+      ui.setCursor(vec2(30, cursorY))
+      ui.dummy(vec2(rowWidth, 18))
       
       if ui.itemHovered() then
         ui.drawRect(
-          vec2(20, cursorY - 2), 
-          vec2(rowWidth + 20, cursorY + rowHeight - 2), 
+          vec2(30, cursorY), 
+          vec2(rowWidth + 30, cursorY + 18), 
           rgbm(0.4, 0.4, 0.4, 0.6), 
-          4, 
-          1.5
+          2, 
+          1.2
         )
-        if ui.mouseClicked() then
-          selectedCar = player.car
-          selectedCarIndex = player.index
-        end
       end
       
-      ui.offsetCursorY(rowHeight + 5)
+      if ui.itemClicked() then
+        selectedCar = player.car
+        selectedCarIndex = player.index
+      end
     end
   end
+  
+  ui.popStyleVar()
   ui.popDWriteFont()
   
-  ui.offsetCursorY(20)
+  ui.offsetCursorY(25)
+  ui.separator()
+  ui.offsetCursorY(25)
   
   ui.pushDWriteFont('Arial')
   if not selectedCar then
-    ui.dwriteDrawText('لم يتم اختيار لاعب', 14, vec2(25, ui.getCursorY()), rgbm(0.7, 0.4, 0.3, 1))
-    ui.offsetCursorY(28)
+    ui.dwriteDrawText('لم يتم اختيار لاعب', 15, vec2(35, ui.getCursorY()), rgbm(0.7, 0.4, 0.3, 1))
+    ui.offsetCursorY(32)
   else
     local playerName = ac.getDriverName(selectedCarIndex)
     local speed = selectedCar.speedKmh
@@ -133,10 +138,10 @@ local function TeleportHUD()
       speedColor = rgbm(1, 0.7, 0.3, 1)
     end
     
-    ui.dwriteDrawText('اللاعب المختار: ' .. playerName, 14, vec2(25, ui.getCursorY()), rgbm(0.3, 0.9, 0.3, 1))
-    ui.offsetCursorY(24)
-    ui.dwriteDrawText(string.format('السرعة: %d كم/س', math.floor(speed)), 14, vec2(25, ui.getCursorY()), speedColor)
+    ui.dwriteDrawText('اللاعب المختار: ' .. playerName, 15, vec2(35, ui.getCursorY()), rgbm(0.3, 0.9, 0.3, 1))
     ui.offsetCursorY(28)
+    ui.dwriteDrawText(string.format('السرعة: %d كم/س', math.floor(speed)), 15, vec2(35, ui.getCursorY()), speedColor)
+    ui.offsetCursorY(32)
   end
   ui.popDWriteFont()
   
@@ -144,13 +149,16 @@ local function TeleportHUD()
     local timeLeft = math.max(0, 10 - (os.clock() - collisionDisabledTime))
     if timeLeft > 0 then
       ui.pushDWriteFont('Arial')
-      ui.dwriteDrawText(string.format('التصادم معطل لمدة %d ثانية', math.ceil(timeLeft)), 13, vec2(25, ui.getCursorY()), rgbm(1, 0.85, 0.3, 1))
+      ui.dwriteDrawText(string.format('التصادم معطل لمدة %d ثانية', math.ceil(timeLeft)), 14, vec2(35, ui.getCursorY()), rgbm(1, 0.85, 0.3, 1))
       ui.popDWriteFont()
-      ui.offsetCursorY(24)
+      ui.offsetCursorY(28)
     else
       isCollisionDisabled = false
     end
   end
+  
+  ui.separator()
+  ui.offsetCursorY(25)
   
   ui.pushDWriteFont('Arial;Weight=Bold')
   ui.dwriteDrawText('اختر وضع الانتقال:', 15, vec2(20, ui.getCursorY()), rgbm(0.9, 0.9, 0.9, 1))
@@ -158,8 +166,9 @@ local function TeleportHUD()
   ui.offsetCursorY(22)
   
   ui.pushStyleColor(ui.StyleColor.CheckMark, rgbm(0.2, 0.7, 1, 1))
-  ui.pushStyleColor(ui.StyleColor.FrameBg, rgbm(0.15, 0.15, 0.2, 1))
-  ui.pushStyleColor(ui.StyleColor.FrameBgHovered, rgbm(0.2, 0.2, 0.25, 1))
+  ui.pushStyleColor(ui.StyleColor.FrameBg, rgbm(0.15, 0.15, 0.2, 0.8))
+  ui.pushStyleColor(ui.StyleColor.FrameBgHovered, rgbm(0.25, 0.25, 0.35, 1))
+  ui.pushStyleColor(ui.StyleColor.FrameBgActive, rgbm(0.2, 0.5, 0.8, 1))
   
   ui.setCursorX(25)
   
@@ -168,7 +177,7 @@ local function TeleportHUD()
     teleportMode = 1
   end
   ui.sameLine(0, 12)
-  ui.pushDWriteFont('Arial')
+  ui.pushDWriteFont('Arial;Weight=Bold')
   ui.setCursorY(ui.getCursorY() + 2)
   ui.dwriteDrawText('انتقال فوري', 14, vec2(ui.getCursorX(), ui.getCursorY()), rgbm(0.95, 0.95, 0.95, 1))
   ui.popDWriteFont()
@@ -182,22 +191,38 @@ local function TeleportHUD()
     teleportMode = 2
   end
   ui.sameLine(0, 12)
-  ui.pushDWriteFont('Arial')
+  ui.pushDWriteFont('Arial;Weight=Bold')
   ui.setCursorY(ui.getCursorY() + 2)
   ui.dwriteDrawText('انتقال آمن (نفس السرعة)', 14, vec2(ui.getCursorX(), ui.getCursorY()), rgbm(0.95, 0.95, 0.95, 1))
   ui.popDWriteFont()
   ui.endGroup()
   
-  ui.popStyleColor(3)
+  ui.popStyleColor(4)
   
-  ui.offsetCursorY(22)
+  ui.offsetCursorY(25)
+  ui.separator()
+  ui.offsetCursorY(20)
   
   ui.pushDWriteFont('Arial;Style=Italic')
-  ui.dwriteDrawText('نصيحة: اختر لاعب أولاً، ثم اضغط على OK', 13, vec2(25, ui.getCursorY()), rgbm(1, 0.9, 0.3, 1))
+  ui.dwriteDrawText('نصيحة: اختر لاعب أولاً، ثم اضغط على OK', 13, vec2(35, ui.getCursorY()), rgbm(1, 0.9, 0.3, 1))
   ui.popDWriteFont()
   
-  ui.offsetCursorY(10)
+  ui.offsetCursorY(15)
+  ui.popItemWidth()
 end
+
+-- Event للتحكم في التصادمات مع اللاعبين الآخرين
+local disabledCollisionEvent = ac.OnlineEvent({
+    ac.StructItem.key('disabledCollisionEvent'),
+    disabled = ac.StructItem.boolean()
+  },
+  function(sender, data)
+    if sender == nil then return end
+    if sender.index == 0 then return end
+    ac.log(string.format('%s collision: [%d] %s', (data.disabled and 'Disabled' or 'Enabled'), sender.index, ac.getDriverName(sender.index)))
+    physics.disableCarCollisions(sender.index, data.disabled)
+    physics.disableCarCollisions(0, data.disabled)
+  end)
 
 local function TeleportHUDClosed(okClicked)
   if okClicked and selectedCar then
@@ -213,14 +238,15 @@ local function TeleportHUDClosed(okClicked)
       physics.setCarVelocity(0, targetVelocity)
     end
     
-    if physics.disableCarCollisions ~= nil then
-      physics.disableCarCollisions(0, true)
-      disabledCollision = true
-      isCollisionDisabled = true
-      collisionDisabledTime = os.clock()
-      teleportTimer = 0
-      ac.log("[TeleportToPlayer] Collisions disabled for 10 seconds")
-    end
+    -- تعطيل التصادم باستخدام الأوامر من FastTravel
+    ac.log('Disabled own collisions')
+    physics.disableCarCollisions(0, true)
+    disabledCollisionEvent({ disabled = true })
+    disabledCollision = true
+    isCollisionDisabled = true
+    collisionDisabledTime = os.clock()
+    teleportTimer = 0
+    ac.log("[TeleportToPlayer] Collisions disabled for 10 seconds")
 
     selectedCar = nil
     selectedCarIndex = nil
@@ -248,12 +274,13 @@ function script.update(dt)
       end
 
       if not tooClose then
-        if physics.disableCarCollisions ~= nil then
-          physics.disableCarCollisions(0, false)
-          disabledCollision = false
-          isCollisionDisabled = false
-          ac.log("[TeleportToPlayer] Collisions re-enabled")
-        end
+        -- إعادة تفعيل التصادم باستخدام الأوامر من FastTravel
+        ac.log('Enabled own collisions')
+        physics.disableCarCollisions(0, false)
+        disabledCollisionEvent({ disabled = false })
+        disabledCollision = false
+        isCollisionDisabled = false
+        ac.log("[TeleportToPlayer] Collisions re-enabled")
       end
     end
   end
@@ -261,7 +288,7 @@ end
 
 ui.registerOnlineExtra(
   ui.Icons.FastForward, 
-  '', 
+  'Teleport To Player', 
   nil,
   TeleportHUD, 
   TeleportHUDClosed,
