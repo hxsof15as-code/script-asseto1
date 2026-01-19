@@ -1,0 +1,326 @@
+---@class TeleportHUD
+--- Improved Teleport HUD for Assetto Corsa with enhanced functionality and robust error handling coded with love Pegasus discord : @pegasusq
+
+local sim = ac.getSim()
+
+--- Comprehensive configuration parameters with comments
+---@class TeleportConfig
+local CONFIG = {
+    --- Zoom configuration with extended control
+    ZOOM = {
+        DEFAULT = 0.8,    -- Default zoom level
+        MIN = 0.5,        -- Minimum zoom level
+        MAX = 2.0,        -- Maximum zoom level
+        SENSITIVITY = 0.1 -- Zoom wheel sensitivity
+    },
+    --- Map default dimensions
+    MAP = {
+        DEFAULT_WIDTH = 600,
+        DEFAULT_HEIGHT = 600
+    },
+    --- Teleport safety parameters
+    TELEPORT = {
+        GROUND_OFFSET = 1.0,   -- Height offset above ground
+        MAX_RAYCAST_DISTANCE = 10000 -- Maximum raycast distance
+    }
+}
+
+--- Comprehensive state management
+---@class TeleportState
+local state = {
+    zoomLevel = CONFIG.ZOOM.DEFAULT,
+    currentUiTargetPos = vec2(0, 0),
+    targetPos = vec2(0.5, 0.5),
+    mapParams = nil,
+    mapSize = nil,
+    mapFilename = nil,
+    zoomCenter = nil,
+    originalMapSize = nil,
+    --- Error tracking
+    lastError = nil
+}
+
+--- Safely log errors with timestamp
+---@param errorMessage string Error message to log
+local function logError(errorMessage)
+    state.lastError = {
+        message = errorMessage,
+        timestamp = os.time()
+    }
+    ac.log("[Teleport MAP] ERROR: " .. errorMessage)
+end
+
+--- Advanced map parameter initialization with extensive error handling
+local function initializeMapParameters()
+    local trackFolder = ac.getFolder(ac.FolderID.ContentTracks)
+    local trackId = ac.getTrackFullID('/')
+    
+    -- Comprehensive error checking
+    if not trackFolder or not trackId then
+        logError("Unable to determine track folder or track ID")
+        return false
+    end
+    
+    local mapIniPath = trackFolder..'/'..trackId..'/data/map.ini'
+    
+    -- Check if map.ini exists
+    if not io.fileExists(mapIniPath) then
+        logError("Map configuration file not found: " .. mapIniPath)
+        return false
+    end
+    
+    -- Safe parameter loading with comprehensive defaults
+    local success, mapParams = pcall(function()
+        return ac.INIConfig.load(mapIniPath):mapSection('PARAMETERS', {
+            X_OFFSET = 0,
+            Z_OFFSET = 0,
+            SCALE_FACTOR = 1,
+            WIDTH = CONFIG.MAP.DEFAULT_WIDTH,
+            HEIGHT = CONFIG.MAP.DEFAULT_HEIGHT
+        })
+    end)
+    
+    if not success then
+        logError("Failed to load map parameters: " .. tostring(mapParams))
+        return false
+    end
+    
+    state.mapParams = mapParams
+    
+    -- Robust map size calculation
+    state.mapSize = vec2(
+        math.max(1, state.mapParams.WIDTH / state.mapParams.HEIGHT * 1000), 
+        1000
+    )
+    
+    -- Store original map size for reset
+    state.originalMapSize = state.mapSize:clone()
+    
+    -- Verify map image exists
+    local mapImagePath = trackFolder..'/'..trackId..'/map.png'
+    if not io.fileExists(mapImagePath) then
+        logError("Map image not found: " .. mapImagePath)
+        return false
+    end
+    
+    state.mapFilename = mapImagePath
+    
+    -- Reset zoom-related properties
+    state.zoomLevel = CONFIG.ZOOM.DEFAULT
+    state.zoomCenter = nil
+    
+    return true
+end
+
+--- Convert UI position to world position with improved precision
+---@param drawOrigin vec2 2D Origin where the map is drawn
+---@param uiPos vec2 UI position
+---@return vec2 World position
+local function uiPosToWorldPos(drawOrigin, uiPos)
+    -- Ensure map parameters are valid
+    if not state.mapParams then return vec2(0, 0) end
+    
+    local p = (uiPos - drawOrigin) / state.mapSize
+    local worldPosX = (p.x * state.mapParams.WIDTH * state.mapParams.SCALE_FACTOR) - state.mapParams.X_OFFSET
+    local worldPosY = (p.y * state.mapParams.HEIGHT * state.mapParams.SCALE_FACTOR) - state.mapParams.Z_OFFSET
+    return vec2(worldPosX, worldPosY)
+end
+
+--- Convert world position to UI position with improved precision
+---@param drawOrigin vec2 2D Origin where the map is drawn
+---@param worldPos vec3 World position
+---@return vec2 UI position
+local function worldPosToUiPos(drawOrigin, worldPos)
+    -- Ensure map parameters are valid
+    if not state.mapParams then return vec2(0, 0) end
+    
+    local relPosX = (worldPos.x + state.mapParams.X_OFFSET) / state.mapParams.WIDTH / state.mapParams.SCALE_FACTOR
+    local relPosY = (worldPos.z + state.mapParams.Z_OFFSET) / state.mapParams.HEIGHT / state.mapParams.SCALE_FACTOR
+    return drawOrigin + vec2(relPosX, relPosY) * state.mapSize
+end
+
+--- Draw a car marker on the map with enhanced visibility
+---@param pos vec2 Position to draw the marker
+---@param color rgbm Color of the marker
+---@param text string Text to display
+local function drawCar(pos, color, text)
+    -- Outer white border for better visibility
+    ui.drawCircleFilled(pos, 4, rgbm.colors.white)
+    ui.drawCircleFilled(pos, 3, color)
+    
+    -- Text with shadow for readability
+    ui.drawText(text, pos + vec2(0, -5), color, 12, true)
+end
+
+--- Safely fix world position height to prevent teleportation issues
+---@param worldPos vec3 Original world position
+---@return vec3 Adjusted world position
+local function fixWorldPosHeight(worldPos)
+    -- Validate input
+    if not worldPos then 
+        logError("Invalid world position provided")
+        return vec3(0, 0, 0) 
+    end
+    
+    local trackPos = ac.worldCoordinateToTrack(worldPos)
+    trackPos.y = CONFIG.TELEPORT.GROUND_OFFSET  -- Consistent height above track
+    return ac.trackCoordinateToWorld(trackPos)
+end
+
+--- Main Teleport HUD function with improved error handling
+local function teleportHUD()
+    -- Ensure map parameters are initialized
+    if not state.mapParams and not initializeMapParameters() then
+        ui.text("Error: Could not initialize map")
+        return
+    end
+
+    local drawOrigin = ui.getCursor()
+
+    -- Enhanced reset functionality
+    if ui.button('Reset Map') then
+        if not initializeMapParameters() then
+            ui.openPopup("Reset Error")
+        else
+            state.zoomLevel = CONFIG.ZOOM.DEFAULT
+            state.currentUiTargetPos = vec2(0, 0)
+            state.targetPos = vec2(0.5, 0.5)
+        end
+    end
+
+    -- Error popup
+    if ui.beginPopup("Reset Error") then
+        ui.text("Failed to reset map. Check console for details.")
+        if ui.button("Close") then
+            ui.closeCurrentPopup()
+        end
+        ui.endPopup()
+    end
+
+    ui.sameLine()
+    ui.text('Select Teleport Point:')
+
+    -- Improved zoom handling
+    local mouseWheel = ui.mouseWheel()
+    if mouseWheel ~= 0 then
+        state.zoomLevel = math.max(
+            CONFIG.ZOOM.MIN, 
+            math.min(CONFIG.ZOOM.MAX, 
+                state.zoomLevel + mouseWheel * CONFIG.ZOOM.SENSITIVITY
+            )
+        )
+    end
+
+    -- Calculate zoomed map size
+    local zoomedMapSize = state.mapSize * state.zoomLevel
+    local mapDrawEnd = drawOrigin + zoomedMapSize
+
+    -- Safely draw map image
+    if state.mapFilename then
+        ui.drawImage(state.mapFilename, drawOrigin, mapDrawEnd)
+    end
+
+    -- Draw connected cars with improved filtering
+    for i = 0, sim.carsCount - 1 do
+        local car = ac.getCar(i)
+        local driverName = ac.getDriverName(i)
+        
+        -- Enhanced car filtering
+        if car and car.isConnected and not car.isAIControlled and driverName and not driverName:find("Traffic") then
+            local color = i == 0 and rgbm.colors.red or rgbm.colors.blue
+            
+            -- Adjust car position based on zoom
+            local carUiPos = worldPosToUiPos(drawOrigin, car.position)
+            local zoomedCarUiPos = drawOrigin + (carUiPos - drawOrigin) * state.zoomLevel
+            
+            drawCar(zoomedCarUiPos, color, driverName)
+        end
+    end
+
+    -- Create dummy space for interaction
+    ui.dummy(zoomedMapSize)
+
+    -- Handle map click for teleportation
+    if ui.itemClicked() then
+        local mousePos = ui.mouseLocalPos()
+        
+        -- Adjust mouse position for zoom
+        local adjustedMousePos = drawOrigin + (mousePos - drawOrigin) / state.zoomLevel
+        
+        state.currentUiTargetPos = mousePos
+        -- Save world position
+        state.targetPos = uiPosToWorldPos(drawOrigin, adjustedMousePos)
+    end
+
+    -- Draw target marker
+    ui.drawCircleFilled(state.currentUiTargetPos, 4, rgbm.colors.green)
+
+    -- Display zoom and potential error information
+    ui.text(string.format("Zoom: %.2fx", state.zoomLevel))
+    
+    -- Display last error if exists
+    if state.lastError then
+        ui.textColored(rgbm.colors.red, 
+            string.format("Last Error: %s (at %s)", 
+            state.lastError.message, 
+            os.date("%Y-%m-%d %H:%M:%S", state.lastError.timestamp)
+        ))
+    end
+end
+
+--- Advanced teleport HUD close handler with comprehensive error checking
+---@param okClicked boolean
+local function teleportHUDClosed(okClicked)
+    if not okClicked then return end
+
+    -- Reset velocity safely
+    pcall(physics.setCarVelocity, 0, vec3(0, 0, 0))
+
+    local finalPos
+    -- Preferred method: use track spline with fallback
+    if ac.hasTrackSpline() then
+        finalPos = fixWorldPosHeight(vec3(state.targetPos.x, 0, state.targetPos.y))
+        
+        -- Safe position setting
+        local success, err = pcall(physics.setCarPosition, 0, finalPos, vec3(1, 0, 0))
+        if not success then
+            logError("Teleport failed: " .. tostring(err))
+            ac.setMessage('Teleport Error', 'Failed to set car position.')
+            return
+        end
+    else
+        -- Fallback raycast method with improved error handling
+        local startPos = vec3(state.targetPos.x, CONFIG.TELEPORT.MAX_RAYCAST_DISTANCE, state.targetPos.y)
+        local groundPoint = vec3(0, 0, 0)
+        
+        local raycastResult = physics.raycastTrack(startPos, vec3(0, -1, 0), CONFIG.TELEPORT.MAX_RAYCAST_DISTANCE, groundPoint, nil)
+        if raycastResult > -1 then
+            local success, err = pcall(physics.setCarPosition, 0, groundPoint + vec3(0, CONFIG.TELEPORT.GROUND_OFFSET, 0), vec3(1, 0, 0))
+            if not success then
+                logError("Raycast teleport failed: " .. tostring(err))
+                ac.setMessage('Teleport Error', 'Could not set position after raycast.')
+            end
+        else
+            logError("Raycast failed to find ground")
+            ac.setMessage('Teleport Error', 'Could not determine track surface height.')
+        end
+    end
+end
+
+-- Register the teleport HUD extra with improved flag handling
+ui.registerOnlineExtra(
+    ui.Icons.Map, 
+    'Teleport via map',
+    nil, 
+    teleportHUD, 
+    teleportHUDClosed, 
+    ui.OnlineExtraFlags.Extras,
+    ui.WindowFlags.NoScrollWithMouse
+)
+
+-- Return public interface
+return {
+    initializeMapParameters = initializeMapParameters,
+    -- Expose error logging for external use
+    logError = logError
+}
