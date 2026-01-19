@@ -9,86 +9,51 @@ local isCollisionDisabled = false
 local collisionDisabledTime = 0
 
 -- ═══════════════════════════════════════════════════════════
--- إعدادات الصورة الثابتة من URL
+-- إضافة الصورة من رابط
 -- ═══════════════════════════════════════════════════════════
-local headerImage = nil
-local imageWidth = 400
-local imageHeight = 200
-local imageLoading = true
+local bannerImage = nil
+local imageLoading = false
+local imageLoaded = false
+local imageWidth = 350
+local imageHeight = 150
 
--- ضع رابط الصورة هنا (يفضل PNG أو JPG)
-local imageUrl = 'https://g.top4top.io/p_367151kwf1.png'
+-- ضع رابط صورتك هنا
+local imageUrl = 'https://i.imgur.com/7qW0gQZ.png'
 
--- تحميل الصورة
-web.loadRemoteImage(imageUrl, vec2(imageWidth, imageHeight), function(err, img)
-  if err then
-    ac.log('[Teleport] فشل تحميل الصورة: ' .. tostring(err))
-    imageLoading = false
-  else
-    headerImage = img
-    imageLoading = false
-    ac.log('[Teleport] تم تحميل الصورة بنجاح!')
-  end
-end)
+-- تحميل الصورة من الرابط
+if not imageLoading and not imageLoaded then
+  imageLoading = true
+  web.get(imageUrl, function(err, response)
+    if err or not response or response.status ~= 200 then
+      ac.log('[Teleport] فشل تحميل الصورة')
+      imageLoading = false
+    else
+      local success, img = pcall(function()
+        return ui.decodeImage(response.body)
+      end)
+      if success and img then
+        bannerImage = img
+        imageLoaded = true
+        ac.log('[Teleport] تم تحميل الصورة بنجاح!')
+      end
+      imageLoading = false
+    end
+  end)
+end
 
 local function TeleportHUD()
   -- ═══════════════════════════════════════════════════════════
-  -- STATIC IMAGE SECTION
+  -- عرض الصورة إذا تم تحميلها
   -- ═══════════════════════════════════════════════════════════
-  if headerImage then
-    -- حساب المركز
+  if bannerImage then
     local availableWidth = ui.availableSpaceX()
     local centerX = (availableWidth - imageWidth) / 2
-    
     ui.setCursorX(centerX)
-    
-    -- رسم خلفية بتأثير توهج
-    local cursorPos = ui.getCursor()
-    ui.drawRectFilled(
-      cursorPos - vec2(10, 10),
-      cursorPos + vec2(imageWidth + 10, imageHeight + 10),
-      rgbm(0.1, 0.4, 0.8, 0.2),
-      12
-    )
-    
-    -- رسم حدود
-    ui.drawRect(
-      cursorPos - vec2(5, 5),
-      cursorPos + vec2(imageWidth + 5, imageHeight + 5),
-      rgbm(0.3, 0.6, 1, 0.6),
-      12,
-      3
-    )
-    
-    -- عرض الصورة
-    ui.image(headerImage, vec2(imageWidth, imageHeight))
-    
+    ui.image(bannerImage, vec2(imageWidth, imageHeight))
     ui.offsetCursorY(15)
-  elseif imageLoading then
-    -- رسالة تحميل مع أنيميشن
-    ui.pushFont(ui.Font.Small)
-    local dots = string.rep('.', (math.floor(os.clock() * 2) % 4))
-    local loadingText = 'Loading image' .. dots
-    local textWidth = ui.measureText(loadingText).x
-    local availableWidth = ui.availableSpaceX()
-    ui.setCursorX((availableWidth - textWidth) / 2)
-    ui.textColored(loadingText, rgbm(0.5, 0.7, 1, 1))
-    ui.popFont()
-    ui.offsetCursorY(10)
-  else
-    -- رسالة خطأ
-    ui.pushFont(ui.Font.Small)
-    local errorText = '✗ Failed to load image'
-    local textWidth = ui.measureText(errorText).x
-    local availableWidth = ui.availableSpaceX()
-    ui.setCursorX((availableWidth - textWidth) / 2)
-    ui.textColored(errorText, rgbm(1, 0.3, 0.3, 1))
-    ui.popFont()
+    ui.separator()
     ui.offsetCursorY(10)
   end
-  
-  ui.separator()
-  ui.offsetCursorY(10)
   
   -- ═══════════════════════════════════════════════════════════
   -- HEADER
