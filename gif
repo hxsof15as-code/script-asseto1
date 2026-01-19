@@ -18,7 +18,7 @@ local imageWidth = 350
 local imageHeight = 150
 
 -- ضع رابط صورتك هنا
-local imageUrl = 'https://i.imgur.com/7qW0gQZ.png'
+local imageUrl = 'https://media2.giphy.com/media/v1.Y2lkPTc5MGI3NjExZGx1Zm9sdGNpcXRyY2Jza3oyd2VzbjI0YnduenlxeDFlNGQ4NmkxZiZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/jM6nZYXVqZA3jvZNGX/giphy.gif'
 
 -- تحميل الصورة من الرابط
 if not imageLoading and not imageLoaded then
