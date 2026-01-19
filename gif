@@ -47,7 +47,7 @@ local function TeleportHUD()
     local centerX = (availableWidth - imageWidth) / 2
     ui.setCursorX(centerX)
     ui.image(bannerImage, vec2(imageWidth, imageHeight))
-    ui.offsetCursorY(8)
+    ui.offsetCursorY(5)
   end
   
   -- ═══════════════════════════════════════════════════════════
@@ -62,7 +62,7 @@ local function TeleportHUD()
   ui.endOutline(rgbm(0, 0, 0, 1), 0.8)
   ui.popDWriteFont()
   
-  ui.offsetCursorY(18)
+  ui.offsetCursorY(12)
   
   -- ═══════════════════════════════════════════════════════════
   -- قائمة اللاعبين
@@ -70,7 +70,7 @@ local function TeleportHUD()
   ui.pushDWriteFont('Arial;Weight=Bold')
   ui.dwriteDrawText('اختر السيارة للانتقال إليها:', 11, vec2(10, ui.getCursorY()), rgbm(0.8, 0.8, 0.8, 1))
   ui.popDWriteFont()
-  ui.offsetCursorY(15)
+  ui.offsetCursorY(12)
   
   -- جمع اللاعبين
   local players = {}
@@ -86,14 +86,20 @@ local function TeleportHUD()
   ui.pushDWriteFont('Consolas')
   if #players == 0 then
     ui.dwriteDrawText('لم يتم اختيار لاعب', 11, vec2(15, ui.getCursorY()), rgbm(0.7, 0.4, 0.3, 1))
-    ui.offsetCursorY(20)
+    ui.offsetCursorY(18)
   else
+    -- حساب عدد اللاعبين لتحديد الارتفاع الديناميكي
+    local maxVisiblePlayers = 6
+    local playersToShow = math.min(#players, maxVisiblePlayers)
+    
     for idx, player in ipairs(players) do
+      if idx > maxVisiblePlayers then break end
+      
       local isSelected = selectedCarIndex == player.index
       local cursorY = ui.getCursorY()
       
       -- خلفية الصف
-      local rowHeight = 20
+      local rowHeight = 18
       local rowWidth = ui.availableSpaceX() - 20
       
       if isSelected then
@@ -107,7 +113,7 @@ local function TeleportHUD()
       
       -- رسم اسم اللاعب
       local textColor = isSelected and rgbm(0.2, 0.7, 1, 1) or rgbm(0.85, 0.85, 0.85, 1)
-      ui.dwriteDrawText(player.name, 11, vec2(18, cursorY + 4), textColor)
+      ui.dwriteDrawText(player.name, 11, vec2(18, cursorY + 3), textColor)
       
       -- منطقة قابلة للنقر
       ui.setCursor(vec2(10, cursorY))
@@ -127,12 +133,12 @@ local function TeleportHUD()
         end
       end
       
-      ui.offsetCursorY(rowHeight + 2)
+      ui.offsetCursorY(rowHeight + 1)
     end
   end
   ui.popDWriteFont()
   
-  ui.offsetCursorY(8)
+  ui.offsetCursorY(5)
   
   -- ═══════════════════════════════════════════════════════════
   -- حالة التحديد
@@ -140,7 +146,7 @@ local function TeleportHUD()
   ui.pushDWriteFont('Arial')
   if not selectedCar then
     ui.dwriteDrawText('لم يتم اختيار لاعب', 11, vec2(15, ui.getCursorY()), rgbm(0.7, 0.4, 0.3, 1))
-    ui.offsetCursorY(16)
+    ui.offsetCursorY(14)
   else
     local playerName = ac.getDriverName(selectedCarIndex)
     local speed = selectedCar.speedKmh
@@ -152,9 +158,9 @@ local function TeleportHUD()
     end
     
     ui.dwriteDrawText('اللاعب المختار: ' .. playerName, 11, vec2(15, ui.getCursorY()), rgbm(0.3, 0.9, 0.3, 1))
-    ui.offsetCursorY(15)
+    ui.offsetCursorY(13)
     ui.dwriteDrawText(string.format('السرعة: %d كم/س', math.floor(speed)), 11, vec2(15, ui.getCursorY()), speedColor)
-    ui.offsetCursorY(16)
+    ui.offsetCursorY(14)
   end
   ui.popDWriteFont()
   
@@ -164,7 +170,7 @@ local function TeleportHUD()
       ui.pushDWriteFont('Arial')
       ui.dwriteDrawText(string.format('التصادم معطل لمدة %d ثانية', math.ceil(timeLeft)), 10, vec2(15, ui.getCursorY()), rgbm(1, 0.85, 0.3, 1))
       ui.popDWriteFont()
-      ui.offsetCursorY(15)
+      ui.offsetCursorY(13)
     else
       isCollisionDisabled = false
     end
@@ -176,7 +182,7 @@ local function TeleportHUD()
   ui.pushDWriteFont('Arial;Weight=Bold')
   ui.dwriteDrawText('اختر وضع الانتقال:', 11, vec2(10, ui.getCursorY()), rgbm(0.8, 0.8, 0.8, 1))
   ui.popDWriteFont()
-  ui.offsetCursorY(14)
+  ui.offsetCursorY(12)
   
   ui.pushStyleColor(ui.StyleColor.CheckMark, rgbm(0.2, 0.7, 1, 1))
   ui.pushStyleColor(ui.StyleColor.FrameBg, rgbm(0.15, 0.15, 0.2, 1))
@@ -196,7 +202,7 @@ local function TeleportHUD()
   ui.popDWriteFont()
   ui.endGroup()
   
-  ui.dummy(vec2(0, 6))
+  ui.dummy(vec2(0, 5))
   ui.setCursorX(15)
   
   -- خيار انتقال آمن
@@ -213,7 +219,7 @@ local function TeleportHUD()
   
   ui.popStyleColor(3)
   
-  ui.offsetCursorY(12)
+  ui.offsetCursorY(10)
   
   -- ═══════════════════════════════════════════════════════════
   -- ملاحظة
