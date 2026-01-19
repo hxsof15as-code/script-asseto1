@@ -73,9 +73,9 @@ local function TeleportHUD()
   -- قائمة اللاعبين
   -- ═══════════════════════════════════════════════════════════
   ui.pushDWriteFont('Arial;Weight=Bold')
-  ui.dwriteDrawText('قائمة اللاعبين', 16, vec2(10, ui.getCursorY()), rgbm(1, 1, 1, 1))
+  ui.dwriteDrawText('اختر السيارة للانتقال إليها:', 16, vec2(10, ui.getCursorY()), rgbm(1, 1, 1, 1))
   ui.popDWriteFont()
-  ui.offsetCursorY(25)
+  ui.offsetCursorY(30)
   
   -- جمع اللاعبين
   local players = {}
@@ -87,38 +87,55 @@ local function TeleportHUD()
     end
   end
   
-  -- عرض القائمة بشكل نصي مرتب
-  ui.pushDWriteFont('Arial')
+  -- عرض القائمة بأسلوب Empire
+  ui.pushDWriteFont('Consolas;Weight=Bold')
   if #players == 0 then
-    ui.dwriteDrawText('لا يوجد لاعبين', 14, vec2(10, ui.getCursorY()), rgbm(0.7, 0.3, 0.3, 1))
-    ui.offsetCursorY(20)
+    ui.dwriteDrawText('لا يوجد لاعبين متصلين', 15, vec2(10, ui.getCursorY()), rgbm(0.7, 0.3, 0.3, 1))
+    ui.offsetCursorY(25)
   else
     for idx, player in ipairs(players) do
       local isSelected = selectedCarIndex == player.index
-      local textColor = isSelected and rgbm(0.3, 0.8, 1, 1) or rgbm(0.8, 0.8, 0.8, 1)
-      
-      -- رسم المربع الصغير للاختيار
       local cursorY = ui.getCursorY()
-      ui.setCursor(vec2(10, cursorY))
+      
+      -- خلفية الصف عند التحديد أو التحويم
+      local rowHeight = 28
+      local rowWidth = ui.availableSpaceX()
       
       if isSelected then
-        ui.drawRectFilled(vec2(10, cursorY), vec2(25, cursorY + 15), rgbm(0.3, 0.8, 1, 1), 2)
-      else
-        ui.drawRect(vec2(10, cursorY), vec2(25, cursorY + 15), rgbm(0.5, 0.5, 0.5, 1), 2, 1)
+        ui.drawRectFilled(
+          vec2(5, cursorY - 2), 
+          vec2(rowWidth - 5, cursorY + rowHeight - 2), 
+          rgbm(0.2, 0.5, 0.8, 0.3), 
+          3
+        )
       end
       
-      -- اسم اللاعب
-      ui.dwriteDrawText(player.name, 13, vec2(35, cursorY + 2), textColor)
+      -- رسم اسم اللاعب بأسلوب واضح
+      local playerText = player.name
+      local textColor = isSelected and rgbm(0.3, 0.8, 1, 1) or rgbm(0.9, 0.9, 0.9, 1)
+      
+      ui.setCursor(vec2(20, cursorY + 5))
+      ui.dwriteDrawText(playerText, 16, vec2(20, cursorY + 5), textColor)
       
       -- منطقة قابلة للنقر
-      ui.setCursor(vec2(10, cursorY))
-      ui.invisibleButton('player_' .. idx, vec2(ui.availableSpaceX(), 18))
-      if ui.itemHovered() and ui.mouseClicked() then
-        selectedCar = player.car
-        selectedCarIndex = player.index
+      ui.setCursor(vec2(5, cursorY))
+      ui.invisibleButton('player_' .. idx, vec2(rowWidth - 10, rowHeight))
+      
+      if ui.itemHovered() then
+        ui.drawRect(
+          vec2(5, cursorY - 2), 
+          vec2(rowWidth - 5, cursorY + rowHeight - 2), 
+          rgbm(0.5, 0.5, 0.5, 0.5), 
+          3, 
+          1.5
+        )
+        if ui.mouseClicked() then
+          selectedCar = player.car
+          selectedCarIndex = player.index
+        end
       end
       
-      ui.offsetCursorY(20)
+      ui.offsetCursorY(rowHeight)
     end
   end
   ui.popDWriteFont()
@@ -126,8 +143,57 @@ local function TeleportHUD()
   ui.offsetCursorY(10)
   ui.separator()
   ui.offsetCursorY(15)
+  
+  -- ═══════════════════════════════════════════════════════════
+  -- معلومات اللاعب المحدد
+  -- ═══════════════════════════════════════════════════════════
+  if selectedCar then
+    local playerName = ac.getDriverName(selectedCarIndex)
+    ui.pushDWriteFont('Arial')
+    ui.dwriteDrawText('اللاعب المختار: ' .. playerName, 14, vec2(10, ui.getCursorY()), rgbm(0.3, 1, 0.3, 1))
+    ui.offsetCursorY(20)
+    
+    local speed = selectedCar.speedKmh
+    local speedColor = rgbm(0.5, 1, 0.5, 1)
+    if speed > 200 then
+      speedColor = rgbm(1, 0.3, 0.3, 1)
+    elseif speed > 100 then
+      speedColor = rgbm(1, 0.8, 0.3, 1)
+    end
+    
+    ui.dwriteDrawText(string.format('السرعة: %d كم/س', math.floor(speed)), 14, vec2(10, ui.getCursorY()), speedColor)
+    ui.offsetCursorY(20)
+    ui.popDWriteFont()
+    
+    ui.separator()
+    ui.offsetCursorY(10)
+  else
+    ui.pushDWriteFont('Arial')
+    ui.dwriteDrawText('لم يتم اختيار لاعب', 14, vec2(10, ui.getCursorY()), rgbm(0.8, 0.5, 0.3, 1))
+    ui.offsetCursorY(20)
+    ui.popDWriteFont()
+    
+    ui.separator()
+    ui.offsetCursorY(10)
+  end
+  
+  if isCollisionDisabled then
+    local timeLeft = math.max(0, 10 - (os.clock() - collisionDisabledTime))
+    if timeLeft > 0 then
+      ui.pushDWriteFont('Arial')
+      ui.dwriteDrawText(string.format('التصادم معطل لمدة %d ثانية', math.ceil(timeLeft)), 14, vec2(10, ui.getCursorY()), rgbm(1, 0.9, 0.3, 1))
+      ui.popDWriteFont()
+      ui.offsetCursorY(20)
+    else
+      isCollisionDisabled = false
+    end
+  end
+  
+  -- ═══════════════════════════════════════════════════════════
+  -- وضع الانتقال
+  -- ═══════════════════════════════════════════════════════════
   ui.pushDWriteFont('Arial;Weight=Bold')
-  ui.dwriteDrawText('وضع الانتقال', 16, vec2(10, ui.getCursorY()), rgbm(1, 1, 1, 1))
+  ui.dwriteDrawText('اختر وضع الانتقال:', 16, vec2(10, ui.getCursorY()), rgbm(1, 1, 1, 1))
   ui.popDWriteFont()
   ui.offsetCursorY(25)
   
@@ -163,47 +229,15 @@ local function TeleportHUD()
   
   ui.popStyleColor(3)
   
-  ui.offsetCursorY(20)
-  ui.separator()
   ui.offsetCursorY(15)
   
   -- ═══════════════════════════════════════════════════════════
-  -- الحالة
+  -- ملاحظة
   -- ═══════════════════════════════════════════════════════════
-  ui.pushDWriteFont('Arial;Weight=Bold')
-  ui.dwriteDrawText('الحالة', 16, vec2(10, ui.getCursorY()), rgbm(1, 1, 1, 1))
-  ui.popDWriteFont()
-  ui.offsetCursorY(25)
-  
-  ui.pushDWriteFont('Arial')
-  if not selectedCar then
-    ui.dwriteDrawText('لم يتم اختيار لاعب', 14, vec2(10, ui.getCursorY()), rgbm(0.8, 0.5, 0.3, 1))
-    ui.offsetCursorY(20)
-  else
-    local playerName = ac.getDriverName(selectedCarIndex)
-    ui.dwriteDrawText('اللاعب المختار: ' .. playerName, 14, vec2(10, ui.getCursorY()), rgbm(0.3, 1, 0.3, 1))
-    ui.offsetCursorY(20)
-    
-    local speed = selectedCar.speedKmh
-    local speedColor = rgbm(0.5, 1, 0.5, 1)
-    if speed > 200 then
-      speedColor = rgbm(1, 0.3, 0.3, 1)
-    elseif speed > 100 then
-      speedColor = rgbm(1, 0.8, 0.3, 1)
-    end
-    
-    ui.dwriteDrawText(string.format('السرعة: %d كم/س', math.floor(speed)), 14, vec2(10, ui.getCursorY()), speedColor)
-    ui.offsetCursorY(20)
-  end
-  
-  if isCollisionDisabled then
-    local timeLeft = math.max(0, 10 - (os.clock() - collisionDisabledTime))
-    if timeLeft > 0 then
-      ui.dwriteDrawText(string.format('التصادم معطل (%d ثانية)', math.ceil(timeLeft)), 14, vec2(10, ui.getCursorY()), rgbm(1, 0.9, 0.3, 1))
-    else
-      isCollisionDisabled = false
-    end
-  end
+  ui.separator()
+  ui.offsetCursorY(10)
+  ui.pushDWriteFont('Arial;Style=Italic')
+  ui.dwriteDrawText('نصيحة: اختر لاعب أولاً، ثم اضغط على OK', 13, vec2(10, ui.getCursorY()), rgbm(1, 1, 0.3, 1))
   ui.popDWriteFont()
 end
 
