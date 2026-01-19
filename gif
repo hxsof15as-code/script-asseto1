@@ -4,23 +4,20 @@ local selectedCarIndex = nil
 local teleportMode = 1 -- 1 = Instant Teleport, 2 = Safe Teleport (Same Speed)
 local disabledCollision = false
 local teleportTimer = 0
-local collisionDuration = 10 -- 10 seconds no collision after teleport
+local collisionDuration = 10
 local isCollisionDisabled = false
 local collisionDisabledTime = 0
 
 -- ═══════════════════════════════════════════════════════════
--- تحميل الصورة من الرابط
+-- تحميل الصورة
 -- ═══════════════════════════════════════════════════════════
 local bannerImage = nil
 local imageLoading = false
 local imageLoaded = false
 local imageWidth = 350
 local imageHeight = 150
-
--- ضع رابط صورتك هنا
 local imageUrl = 'https://g.top4top.io/p_367151kwf1.png'
 
--- تحميل الصورة من الرابط
 if not imageLoading and not imageLoaded then
   imageLoading = true
   web.get(imageUrl, function(err, response)
@@ -43,7 +40,7 @@ end
 
 local function TeleportHUD()
   -- ═══════════════════════════════════════════════════════════
-  -- عرض الصورة إذا تم تحميلها
+  -- عرض الصورة
   -- ═══════════════════════════════════════════════════════════
   if bannerImage then
     local availableWidth = ui.availableSpaceX()
@@ -57,10 +54,9 @@ local function TeleportHUD()
   ui.offsetCursorY(10)
   
   -- ═══════════════════════════════════════════════════════════
-  -- العنوان العربي الرئيسي
+  -- العنوان
   -- ═══════════════════════════════════════════════════════════
   local availableWidth = ui.availableSpaceX()
-  
   ui.pushDWriteFont('Arial;Weight=Bold')
   ui.beginOutline()
   local titleText = "نظام الانتقال إلى اللاعبين"
@@ -71,7 +67,7 @@ local function TeleportHUD()
   
   ui.offsetCursorY(30)
   ui.separator()
-  ui.offsetCursorY(10)
+  ui.offsetCursorY(15)
   
   -- ═══════════════════════════════════════════════════════════
   -- قائمة اللاعبين
@@ -79,21 +75,19 @@ local function TeleportHUD()
   ui.pushDWriteFont('Arial;Weight=Bold')
   ui.dwriteDrawText('قائمة اللاعبين', 16, vec2(10, ui.getCursorY()), rgbm(1, 1, 1, 1))
   ui.popDWriteFont()
-  
   ui.offsetCursorY(30)
   
-  -- Collect all players
+  -- جمع اللاعبين
   local players = {}
   for i = 1, sim.carsCount - 1 do
     local car = ac.getCar(i)
     local driverName = ac.getDriverName(i)
-    
     if car.isConnected and not car.isAIControlled and not string.find(driverName, "Traaaffic") then
       table.insert(players, {index = i, name = driverName, car = car})
     end
   end
   
-  -- Draw player list with scroll
+  -- عرض القائمة
   ui.childWindow('playersList', vec2(ui.availableSpaceX(), 180), true, function()
     for idx, player in ipairs(players) do
       local isSelected = selectedCarIndex == player.index
@@ -127,7 +121,7 @@ local function TeleportHUD()
   
   ui.offsetCursorY(20)
   ui.separator()
-  ui.offsetCursorY(10)
+  ui.offsetCursorY(15)
   
   -- ═══════════════════════════════════════════════════════════
   -- وضع الانتقال
@@ -135,34 +129,41 @@ local function TeleportHUD()
   ui.pushDWriteFont('Arial;Weight=Bold')
   ui.dwriteDrawText('وضع الانتقال', 16, vec2(10, ui.getCursorY()), rgbm(1, 1, 1, 1))
   ui.popDWriteFont()
-  
-  ui.offsetCursorY(30)
+  ui.offsetCursorY(25)
   
   ui.pushStyleColor(ui.StyleColor.CheckMark, rgbm(0.3, 0.8, 1, 1))
+  ui.pushStyleColor(ui.StyleColor.FrameBg, rgbm(0.2, 0.2, 0.25, 1))
+  ui.pushStyleColor(ui.StyleColor.FrameBgHovered, rgbm(0.25, 0.25, 0.3, 1))
   
-  ui.pushDWriteFont('Arial')
-  if ui.radioButton('##teleport1', teleportMode == 1) then
+  -- خيار انتقال فوري
+  ui.beginGroup()
+  if ui.radioButton('##instant', teleportMode == 1) then
     teleportMode = 1
   end
-  ui.sameLine(0, 8)
-  ui.dwriteDrawText('انتقال فوري', 15, vec2(ui.getCursorX(), ui.getCursorY() - 18), rgbm(1, 1, 1, 1))
-  ui.popDWriteFont()
-  
-  ui.offsetCursorY(10)
-  
+  ui.sameLine(0, 10)
   ui.pushDWriteFont('Arial')
-  if ui.radioButton('##teleport2', teleportMode == 2) then
+  ui.dwriteDrawText('انتقال فوري', 15, vec2(ui.getCursorX(), ui.getCursorY()), rgbm(1, 1, 1, 1))
+  ui.popDWriteFont()
+  ui.endGroup()
+  
+  ui.dummy(vec2(0, 8))
+  
+  -- خيار انتقال آمن
+  ui.beginGroup()
+  if ui.radioButton('##safe', teleportMode == 2) then
     teleportMode = 2
   end
-  ui.sameLine(0, 8)
-  ui.dwriteDrawText('انتقال آمن (نفس السرعة)', 15, vec2(ui.getCursorX(), ui.getCursorY() - 18), rgbm(1, 1, 1, 1))
+  ui.sameLine(0, 10)
+  ui.pushDWriteFont('Arial')
+  ui.dwriteDrawText('انتقال آمن (نفس السرعة)', 15, vec2(ui.getCursorX(), ui.getCursorY()), rgbm(1, 1, 1, 1))
   ui.popDWriteFont()
+  ui.endGroup()
   
-  ui.popStyleColor()
+  ui.popStyleColor(3)
   
-  ui.offsetCursorY(10)
+  ui.offsetCursorY(20)
   ui.separator()
-  ui.offsetCursorY(10)
+  ui.offsetCursorY(15)
   
   -- ═══════════════════════════════════════════════════════════
   -- الحالة
@@ -170,8 +171,7 @@ local function TeleportHUD()
   ui.pushDWriteFont('Arial;Weight=Bold')
   ui.dwriteDrawText('الحالة', 16, vec2(10, ui.getCursorY()), rgbm(1, 1, 1, 1))
   ui.popDWriteFont()
-  
-  ui.offsetCursorY(30)
+  ui.offsetCursorY(25)
   
   ui.pushDWriteFont('Arial')
   if not selectedCar then
@@ -182,16 +182,12 @@ local function TeleportHUD()
     ui.dwriteDrawText('اللاعب المختار: ' .. playerName, 14, vec2(10, ui.getCursorY()), rgbm(0.3, 1, 0.3, 1))
     ui.offsetCursorY(20)
     
-    -- عرض سرعة اللاعب المختار
     local speed = selectedCar.speedKmh
-    local speedColor = rgbm(0.5, 0.8, 1, 1)
-    
+    local speedColor = rgbm(0.5, 1, 0.5, 1)
     if speed > 200 then
-      speedColor = rgbm(1, 0.3, 0.3, 1) -- أحمر للسرعة العالية
+      speedColor = rgbm(1, 0.3, 0.3, 1)
     elseif speed > 100 then
-      speedColor = rgbm(1, 0.8, 0.3, 1) -- برتقالي للسرعة المتوسطة
-    else
-      speedColor = rgbm(0.5, 1, 0.5, 1) -- أخضر للسرعة المنخفضة
+      speedColor = rgbm(1, 0.8, 0.3, 1)
     end
     
     ui.dwriteDrawText(string.format('السرعة: %d كم/س', math.floor(speed)), 14, vec2(10, ui.getCursorY()), speedColor)
@@ -211,38 +207,34 @@ local function TeleportHUD()
   end
   ui.popDWriteFont()
   
-  ui.offsetCursorY(15)
+  ui.offsetCursorY(20)
   ui.separator()
   ui.offsetCursorY(15)
   
   -- ═══════════════════════════════════════════════════════════
-  -- أزرار التحكم بالعربية
+  -- أزرار التحكم
   -- ═══════════════════════════════════════════════════════════
   local buttonWidth = (ui.availableSpaceX() - 20) / 2
   
-  -- زر موافق
   ui.pushStyleColor(ui.StyleColor.Button, rgbm(0.2, 0.7, 0.3, 1))
   ui.pushStyleColor(ui.StyleColor.ButtonHovered, rgbm(0.3, 0.8, 0.4, 1))
   ui.pushStyleColor(ui.StyleColor.ButtonActive, rgbm(0.15, 0.6, 0.25, 1))
-  
   ui.pushDWriteFont('Arial;Weight=Bold')
-  local okClicked = ui.button('OK', vec2(buttonWidth, 35))
+  local okClicked = ui.button('OK', vec2(buttonWidth, 40))
   ui.popDWriteFont()
   ui.popStyleColor(3)
   
   ui.sameLine(0, 20)
   
-  -- زر إلغاء
   ui.pushStyleColor(ui.StyleColor.Button, rgbm(0.7, 0.2, 0.2, 1))
   ui.pushStyleColor(ui.StyleColor.ButtonHovered, rgbm(0.8, 0.3, 0.3, 1))
   ui.pushStyleColor(ui.StyleColor.ButtonActive, rgbm(0.6, 0.15, 0.15, 1))
-  
   ui.pushDWriteFont('Arial;Weight=Bold')
-  local cancelClicked = ui.button('Cancel', vec2(buttonWidth, 35))
+  local cancelClicked = ui.button('Cancel', vec2(buttonWidth, 40))
   ui.popDWriteFont()
   ui.popStyleColor(3)
   
-  -- معالجة النقرات
+  -- معالجة الأزرار
   if okClicked and selectedCar then
     local dir = selectedCar.look
     local spawnPos = selectedCar.position + vec3(0, 0.1, 0) - dir * 8
@@ -286,7 +278,6 @@ function script.update(dt)
       local tooClose = false
       local playerCar = ac.getCar(0)
 
-      -- Check distance to all connected cars
       for i = 1, sim.carsCount - 1 do
         local otherCar = ac.getCar(i)
         if otherCar.isConnected then
@@ -299,7 +290,6 @@ function script.update(dt)
         end
       end
 
-      -- Re-enable collision if safe
       if not tooClose then
         if physics.disableCarCollisions ~= nil then
           physics.disableCarCollisions(0, false)
