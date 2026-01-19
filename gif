@@ -18,7 +18,7 @@ local imageWidth = 350
 local imageHeight = 150
 
 -- ضع رابط صورتك هنا
-local imageUrl = 'https://i.imgur.com/7qW0gQZ.png'
+local imageUrl = 'https://g.top4top.io/p_367151kwf1.png'
 
 -- تحميل الصورة من الرابط
 if not imageLoading and not imageLoaded then
