@@ -112,13 +112,6 @@ local function TeleportHUD()
     end
   end)
   
-  if #players == 0 then
-    ui.pushDWriteFont('Arial')
-    ui.dwriteDrawText('لا يوجد لاعبين', 14, vec2(10, ui.getCursorY()), rgbm(0.7, 0.3, 0.3, 1))
-    ui.popDWriteFont()
-    ui.offsetCursorY(25)
-  end
-  
   ui.offsetCursorY(20)
   ui.separator()
   ui.offsetCursorY(15)
@@ -202,54 +195,30 @@ local function TeleportHUD()
       ui.dwriteDrawText(string.format('التصادم معطل (%d ثانية)', math.ceil(timeLeft)), 14, vec2(10, ui.getCursorY()), rgbm(1, 0.9, 0.3, 1))
     else
       isCollisionDisabled = false
-      ui.dwriteDrawText('التصادم معطل (10 ثواني)', 14, vec2(10, ui.getCursorY()), rgbm(0.5, 0.5, 0.5, 1))
     end
-  else
-    ui.dwriteDrawText('التصادم معطل (10 ثواني)', 14, vec2(10, ui.getCursorY()), rgbm(0.5, 0.5, 0.5, 1))
   end
   ui.popDWriteFont()
-  
-  ui.offsetCursorY(20)
-  ui.separator()
-  ui.offsetCursorY(15)
-  
-  -- ═══════════════════════════════════════════════════════════
-  -- أزرار التحكم
-  -- ═══════════════════════════════════════════════════════════
-  local buttonWidth = (ui.availableSpaceX() - 20) / 2
-  
-  ui.pushStyleColor(ui.StyleColor.Button, rgbm(0.2, 0.7, 0.3, 1))
-  ui.pushStyleColor(ui.StyleColor.ButtonHovered, rgbm(0.3, 0.8, 0.4, 1))
-  ui.pushStyleColor(ui.StyleColor.ButtonActive, rgbm(0.15, 0.6, 0.25, 1))
-  ui.pushDWriteFont('Arial;Weight=Bold')
-  local okClicked = ui.button('OK', vec2(buttonWidth, 40))
-  ui.popDWriteFont()
-  ui.popStyleColor(3)
-  
-  ui.sameLine(0, 20)
-  
-  ui.pushStyleColor(ui.StyleColor.Button, rgbm(0.7, 0.2, 0.2, 1))
-  ui.pushStyleColor(ui.StyleColor.ButtonHovered, rgbm(0.8, 0.3, 0.3, 1))
-  ui.pushStyleColor(ui.StyleColor.ButtonActive, rgbm(0.6, 0.15, 0.15, 1))
-  ui.pushDWriteFont('Arial;Weight=Bold')
-  local cancelClicked = ui.button('Cancel', vec2(buttonWidth, 40))
-  ui.popDWriteFont()
-  ui.popStyleColor(3)
-  
-  -- معالجة الأزرار
+end
+
+local function TeleportHUDClosed(okClicked)
   if okClicked and selectedCar then
     local dir = selectedCar.look
+    
+    -- Calculate spawn position (8 meters behind selected car)
     local spawnPos = selectedCar.position + vec3(0, 0.1, 0) - dir * 8
     
     if teleportMode == 1 then
+      -- Instant teleport: reset velocity
       physics.setCarVelocity(0, vec3(0, 0, 0))
       physics.setCarPosition(0, spawnPos, -dir)
     else
+      -- Safe teleport: maintain target's velocity
       local targetVelocity = selectedCar.velocity
       physics.setCarPosition(0, spawnPos, -dir)
       physics.setCarVelocity(0, targetVelocity)
     end
     
+    -- Disable collisions
     if physics.disableCarCollisions ~= nil then
       physics.disableCarCollisions(0, true)
       disabledCollision = true
@@ -259,11 +228,7 @@ local function TeleportHUD()
       ac.log("[TeleportToPlayer] Collisions disabled for 10 seconds")
     end
 
-    selectedCar = nil
-    selectedCarIndex = nil
-  end
-  
-  if cancelClicked then
+    -- Reset selection
     selectedCar = nil
     selectedCarIndex = nil
   end
@@ -310,6 +275,6 @@ ui.registerOnlineExtra(
   'انتقال للاعبين', 
   nil, 
   TeleportHUD, 
-  nil,
+  TeleportHUDClosed,
   ui.OnlineExtraFlags.Admin
 )
