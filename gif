@@ -93,47 +93,29 @@ local function TeleportHUD()
     end
   end
   
-  -- Draw player grid
-  ui.beginGroup()
-  local cols = 6
-  local buttonWidth = 80
-  local buttonHeight = 30
-  local spacing = 5
-  
-  for idx, player in ipairs(players) do
-    local col = (idx - 1) % cols
-    local row = math.floor((idx - 1) / cols)
-    
-    if col > 0 then
-      ui.sameLine(0, spacing)
+  -- Draw player list with scroll
+  ui.childWindow('playersList', vec2(ui.availableSpaceX(), 120), true, function()
+    for idx, player in ipairs(players) do
+      local isSelected = selectedCarIndex == player.index
+      
+      if isSelected then
+        ui.pushStyleColor(ui.StyleColor.Button, rgbm(0.2, 0.5, 0.9, 1))
+        ui.pushStyleColor(ui.StyleColor.ButtonHovered, rgbm(0.3, 0.6, 1, 1))
+        ui.pushStyleColor(ui.StyleColor.ButtonActive, rgbm(0.15, 0.45, 0.85, 1))
+      else
+        ui.pushStyleColor(ui.StyleColor.Button, rgbm(0.15, 0.15, 0.2, 1))
+        ui.pushStyleColor(ui.StyleColor.ButtonHovered, rgbm(0.2, 0.2, 0.3, 1))
+        ui.pushStyleColor(ui.StyleColor.ButtonActive, rgbm(0.25, 0.25, 0.35, 1))
+      end
+      
+      if ui.button(player.name .. '##player' .. idx, vec2(ui.availableSpaceX(), 30)) then
+        selectedCar = player.car
+        selectedCarIndex = player.index
+      end
+      
+      ui.popStyleColor(3)
     end
-    
-    local isSelected = selectedCarIndex == player.index
-    
-    if isSelected then
-      ui.pushStyleColor(ui.StyleColor.Button, rgbm(0.2, 0.5, 0.9, 1))
-      ui.pushStyleColor(ui.StyleColor.ButtonHovered, rgbm(0.3, 0.6, 1, 1))
-      ui.pushStyleColor(ui.StyleColor.ButtonActive, rgbm(0.15, 0.45, 0.85, 1))
-    else
-      ui.pushStyleColor(ui.StyleColor.Button, rgbm(0.15, 0.15, 0.2, 1))
-      ui.pushStyleColor(ui.StyleColor.ButtonHovered, rgbm(0.2, 0.2, 0.3, 1))
-      ui.pushStyleColor(ui.StyleColor.ButtonActive, rgbm(0.25, 0.25, 0.35, 1))
-    end
-    
-    -- اختصار الاسم إذا كان طويل
-    local displayName = player.name
-    if #displayName > 9 then
-      displayName = string.sub(displayName, 1, 8) .. '..'
-    end
-    
-    if ui.button(displayName, vec2(buttonWidth, buttonHeight)) then
-      selectedCar = player.car
-      selectedCarIndex = player.index
-    end
-    
-    ui.popStyleColor(3)
-  end
-  ui.endGroup()
+  end)
   
   if #players == 0 then
     ui.pushDWriteFont('Arial')
