@@ -268,8 +268,8 @@ end
 -- Register the online extra
 ui.registerOnlineExtra(
   ui.Icons.FastForward, 
-  'Teleport Player', 
-  '',
+  '', 
+  nil,
   TeleportHUD, 
   TeleportHUDClosed,
   ui.OnlineExtraFlags.Admin
