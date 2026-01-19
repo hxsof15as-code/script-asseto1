@@ -18,7 +18,7 @@ local imageWidth = 350
 local imageHeight = 150
 
 -- ضع رابط صورتك هنا
-local imageUrl = 'https://g.top4top.io/p_367151kwf1.png'
+local imageUrl = 'https://i.imgur.com/7qW0gQZ.png'
 
 -- تحميل الصورة من الرابط
 if not imageLoading and not imageLoaded then
@@ -41,6 +41,17 @@ if not imageLoading and not imageLoaded then
   end)
 end
 
+-- ═══════════════════════════════════════════════════════════
+-- دالة لعكس النص العربي
+-- ═══════════════════════════════════════════════════════════
+local function arabicText(text)
+  local reversed = ""
+  for i = #text, 1, -1 do
+    reversed = reversed .. text:sub(i, i)
+  end
+  return reversed
+end
+
 local function TeleportHUD()
   -- ═══════════════════════════════════════════════════════════
   -- عرض الصورة إذا تم تحميلها
@@ -50,6 +61,18 @@ local function TeleportHUD()
     local centerX = (availableWidth - imageWidth) / 2
     ui.setCursorX(centerX)
     ui.image(bannerImage, vec2(imageWidth, imageHeight))
+    ui.offsetCursorY(10)
+    
+    -- ═══ النص العربي تحت الصورة ═══
+    -- ضع النص العربي هنا (سيتم عكسه تلقائياً)
+    local arabicMessage = arabicText("مرحباً بك في نظام الانتقال السريع")
+    
+    ui.pushFont(ui.Font.Main)
+    local textWidth = ui.measureText(arabicMessage).x
+    ui.setCursorX((availableWidth - textWidth) / 2)
+    ui.textColored(arabicMessage, rgbm(0.3, 0.8, 1, 1))
+    ui.popFont()
+    
     ui.offsetCursorY(15)
     ui.separator()
     ui.offsetCursorY(10)
