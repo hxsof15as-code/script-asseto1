@@ -18,7 +18,7 @@ local imageWidth = 350
 local imageHeight = 150
 
 -- ضع رابط صورتك هنا
-local imageUrl = 'https://g.top4top.io/p_367151kwf1.png'
+local imageUrl = 'https://i.imgur.com/7qW0gQZ.png'
 
 -- تحميل الصورة من الرابط
 if not imageLoading and not imageLoaded then
@@ -67,32 +67,20 @@ local function TeleportHUD()
   end
   
   -- ═══════════════════════════════════════════════════════════
-  -- HEADER
-  -- ═══════════════════════════════════════════════════════════
-  ui.pushFont(ui.Font.Title)
-  ui.text('Teleport System')
-  ui.popFont()
-  
-  -- ═══════════════════════════════════════════════════════════
-  -- النص العربي بخط عريض وحديث
+  -- العنوان العربي الرئيسي
   -- ═══════════════════════════════════════════════════════════
   local availableWidth = ui.availableSpaceX()
-  local arabicMessage = "الانتقال إلى اللاعبين"
+  local arabicTitle = "نظام الانتقال إلى اللاعبين"
   
-  ui.pushDWriteFont('Arial;Weight=Bold') -- خط عريض عربي واضح
+  ui.pushDWriteFont('Arial;Weight=Bold')
   ui.beginOutline()
-  local textSize = ui.measureDWriteText(arabicMessage, 16)
-  ui.dwriteDrawText(arabicMessage, 16, vec2((availableWidth - textSize.x) / 2, ui.getCursorY()), rgbm(0.7, 0.7, 0.8, 1))
-  ui.endOutline(rgbm(0, 0, 0, 1), 0.5)
+  local titleSize = ui.measureDWriteText(arabicTitle, 24)
+  -- النص من اليمين
+  ui.dwriteDrawText(arabicTitle, 24, vec2(availableWidth - titleSize.x - 10, ui.getCursorY()), rgbm(1, 1, 1, 1))
+  ui.endOutline(rgbm(0, 0, 0, 1), 0.8)
   ui.popDWriteFont()
   
-  ui.offsetCursorY(20)
-  
-  ui.pushFont(ui.Font.Small)
-  ui.textColored('Player Teleport', rgbm(0.6, 0.6, 0.7, 1))
-  ui.popFont()
-  
-  ui.offsetCursorY(15)
+  ui.offsetCursorY(35)
   ui.separator()
   ui.offsetCursorY(10)
   
