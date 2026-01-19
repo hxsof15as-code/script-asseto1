@@ -1,0 +1,36 @@
+local MAX_GRIP_DECREASE = 0.2;
+local MIN_GRIP_DECREASE = -100;
+
+local gripSliderValue = 0;
+local realGripValue = gripSliderValue;
+local justOpenedWindow = true;
+
+local function windowUI()
+    if (justOpenedWindow) then
+        justOpenedWindow = false;
+        gripSliderValue = realGripValue
+    end
+
+    local val, changed = ui.slider('', gripSliderValue, MIN_GRIP_DECREASE, MAX_GRIP_DECREASE, '%.3f');
+    if (changed) then
+        if (val > MAX_GRIP_DECREASE) then
+            gripSliderValue = MAX_GRIP_DECREASE
+        elseif (val < MIN_GRIP_DECREASE) then
+            gripSliderValue = MIN_GRIP_DECREASE
+        else
+            gripSliderValue = val;
+        end
+    end
+end
+
+local function onWindowUIClose(okClicked)
+    justOpenedWindow = true;
+    if (okClicked) then
+        physics.setGripDecrease(0, ac.Wheel.All, gripSliderValue);
+        realGripValue = gripSliderValue;
+    else
+        gripSliderValue = realGripValue;
+    end
+end
+
+ui.registerOnlineExtra(ui.Icons.Road, 'Track grip', nil, windowUI, onWindowUIClose, nil, nil, vec2(400, 400));
