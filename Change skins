@@ -1,0 +1,95 @@
+local WINDOW_TITLE = 'Change skins';
+local WINDOW_ICON = ui.Icons.Menu;
+
+_local = {
+    car = car,
+}
+_local.carDir = ac.getFolder(ac.FolderID.ContentCars) ..'/'.. ac.getCarID(_local.car.index)
+_local.currentSkin = ac.getCarSkinID(0)
+_local.car_skins = {};
+
+
+
+io.scanDir(_local.carDir ..'/skins', '*', function (fileName)
+    local skin = {name=fileName, files={}};
+
+    io.scanDir(_local.carDir ..'/skins/'.. fileName, '*', function (fileName, fileAttributes)
+        table.insert(skin.files, {name=fileName, fileAttributes=fileAttributes})
+    end)
+
+    table.insert(_local.car_skins, skin);
+end)
+
+local syncCarSkin = ac.OnlineEvent(
+{ 
+    skin = ac.StructItem.string(75),
+    oldSkin = ac.StructItem.string(75),
+},
+function (sender, data)
+    if sender == nil then return end
+
+    
+    applySkin(data.skin, sender.index, data.oldSkin)
+end)
+
+local function getCarSkinFiles(carName, skinName)
+    return io.scanDir(ac.getFolder(ac.FolderID.ContentCars) ..'/'.. carName ..'/skins/'.. skinName, '*')
+end
+
+local function getCarSkinFilesToReset(carName, skinName)
+    local carSkinFiles = getCarSkinFiles(carName, skinName)
+    for i=1, #carSkinFiles do
+        for j=1,#SKIN_FILES_TO_RESET do
+            if (carSkinFiles[i]:lower():find(SKIN_FILES_TO_RESET[j])) then
+                return carSkinFiles[i]
+            end
+        end
+    end
+
+end
+
+function applySkin(skinName, carIndex, oldSkin)
+    local car = ac.getCar(carIndex)
+    if car == nil then return end
+    local carName = ac.getCarID(carIndex)
+    local carNode = ac.findNodes('carRoot:'..car.index)
+    
+    carNode:resetSkin();
+
+    local carSkinFiles = getCarSkinFiles(carName, skinName)
+    ac.debug('carSkinFiles', #carSkinFiles)
+    if (#carSkinFiles > 0) then
+        local theSkin = {};
+        for i=1,#carSkinFiles do
+            theSkin[carSkinFiles[i]] = _local.carDir ..'/skins/'.. skinName ..'/'.. carSkinFiles[i];
+        end
+        carNode:applySkin(theSkin);
+    end
+end
+
+
+local function windowUI()
+    for k, skin in ipairs(_local.car_skins) do
+        if ui.selectable(skin.name, false, ui.SelectableFlags.AllowDoubleClick) then
+            if (skin.name ~= _local.currentSkin) then
+                syncCarSkin({
+                    skin = skin.name,
+                    oldSkin = _local.currentSkin
+                }, true)
+                _local.currentSkin = skin.name
+            end
+        end
+        if (ui.itemHovered()) then
+            ui.tooltip(vec2(5, 5), function ()
+                ui.image(_local.carDir ..'/skins/'.. skin.name ..'/preview.jpg', vec2(256, 144.03))
+            end)
+        end
+        
+    end
+end
+
+local function onWindowUIClose(okClicked)
+    
+end
+
+ui.registerOnlineExtra(WINDOW_ICON, WINDOW_TITLE, nil, windowUI, onWindowUIClose, nil, nil, vec2(400, 400));
