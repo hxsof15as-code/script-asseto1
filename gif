@@ -9,7 +9,7 @@ local isCollisionDisabled = false
 local collisionDisabledTime = 0
 
 -- ═══════════════════════════════════════════════════════════
--- إضافة الصورة من رابط
+-- تحميل الصورة من الرابط
 -- ═══════════════════════════════════════════════════════════
 local bannerImage = nil
 local imageLoading = false
@@ -18,7 +18,7 @@ local imageWidth = 350
 local imageHeight = 150
 
 -- ضع رابط صورتك هنا
-local imageUrl = 'https://i.imgur.com/7qW0gQZ.png'
+local imageUrl = 'https://g.top4top.io/p_367151kwf1.png'
 
 -- تحميل الصورة من الرابط
 if not imageLoading and not imageLoaded then
@@ -41,17 +41,6 @@ if not imageLoading and not imageLoaded then
   end)
 end
 
--- ═══════════════════════════════════════════════════════════
--- دالة لعكس النص العربي
--- ═══════════════════════════════════════════════════════════
-local function arabicText(text)
-  local reversed = ""
-  for i = #text, 1, -1 do
-    reversed = reversed .. text:sub(i, i)
-  end
-  return reversed
-end
-
 local function TeleportHUD()
   -- ═══════════════════════════════════════════════════════════
   -- عرض الصورة إذا تم تحميلها
@@ -62,36 +51,36 @@ local function TeleportHUD()
     ui.setCursorX(centerX)
     ui.image(bannerImage, vec2(imageWidth, imageHeight))
     ui.offsetCursorY(15)
-    ui.separator()
-    ui.offsetCursorY(10)
   end
+  
+  ui.separator()
+  ui.offsetCursorY(10)
   
   -- ═══════════════════════════════════════════════════════════
   -- العنوان العربي الرئيسي
   -- ═══════════════════════════════════════════════════════════
   local availableWidth = ui.availableSpaceX()
-  local arabicTitle = "نظام الانتقال إلى اللاعبين"
   
   ui.pushDWriteFont('Arial;Weight=Bold')
   ui.beginOutline()
-  local titleSize = ui.measureDWriteText(arabicTitle, 24)
-  -- النص من اليمين
-  ui.dwriteDrawText(arabicTitle, 24, vec2(availableWidth - titleSize.x - 10, ui.getCursorY()), rgbm(1, 1, 1, 1))
+  local titleText = "نظام الانتقال إلى اللاعبين"
+  local titleSize = ui.measureDWriteText(titleText, 22)
+  ui.dwriteDrawText(titleText, 22, vec2((availableWidth - titleSize.x) / 2, ui.getCursorY()), rgbm(1, 1, 1, 1))
   ui.endOutline(rgbm(0, 0, 0, 1), 0.8)
   ui.popDWriteFont()
   
-  ui.offsetCursorY(35)
+  ui.offsetCursorY(30)
   ui.separator()
   ui.offsetCursorY(10)
   
   -- ═══════════════════════════════════════════════════════════
-  -- PLAYER LIST
+  -- قائمة اللاعبين
   -- ═══════════════════════════════════════════════════════════
-  ui.pushFont(ui.Font.Main)
-  ui.text('PLAYER LIST')
-  ui.popFont()
+  ui.pushDWriteFont('Arial;Weight=Bold')
+  ui.dwriteDrawText('قائمة اللاعبين', 16, vec2(10, ui.getCursorY()), rgbm(1, 1, 1, 1))
+  ui.popDWriteFont()
   
-  ui.offsetCursorY(8)
+  ui.offsetCursorY(25)
   
   -- Collect all players
   local players = {}
@@ -147,7 +136,9 @@ local function TeleportHUD()
   ui.endGroup()
   
   if #players == 0 then
-    ui.textColored('No players found', rgbm(0.7, 0.3, 0.3, 1))
+    ui.pushDWriteFont('Arial')
+    ui.dwriteDrawText('لا يوجد لاعبين', 14, vec2(10, ui.getCursorY()), rgbm(0.7, 0.3, 0.3, 1))
+    ui.popDWriteFont()
   end
   
   ui.offsetCursorY(15)
@@ -155,25 +146,33 @@ local function TeleportHUD()
   ui.offsetCursorY(10)
   
   -- ═══════════════════════════════════════════════════════════
-  -- TELEPORT MODE
+  -- وضع الانتقال
   -- ═══════════════════════════════════════════════════════════
-  ui.pushFont(ui.Font.Main)
-  ui.text('TELEPORT MODE')
-  ui.popFont()
+  ui.pushDWriteFont('Arial;Weight=Bold')
+  ui.dwriteDrawText('وضع الانتقال', 16, vec2(10, ui.getCursorY()), rgbm(1, 1, 1, 1))
+  ui.popDWriteFont()
   
-  ui.offsetCursorY(5)
+  ui.offsetCursorY(25)
   
   ui.pushStyleColor(ui.StyleColor.CheckMark, rgbm(0.3, 0.8, 1, 1))
   
-  if ui.radioButton('[ Instant Teleport ]', teleportMode == 1) then
+  ui.pushDWriteFont('Arial')
+  if ui.radioButton('', teleportMode == 1) then
     teleportMode = 1
   end
+  ui.sameLine(0, 8)
+  ui.dwriteDrawText('انتقال فوري', 15, vec2(ui.getCursorX(), ui.getCursorY() - 18), rgbm(1, 1, 1, 1))
+  ui.popDWriteFont()
   
-  ui.offsetCursorY(5)
+  ui.offsetCursorY(25)
   
-  if ui.radioButton('[ Safe Teleport (Same Speed) ]', teleportMode == 2) then
+  ui.pushDWriteFont('Arial')
+  if ui.radioButton(' ', teleportMode == 2) then
     teleportMode = 2
   end
+  ui.sameLine(0, 8)
+  ui.dwriteDrawText('انتقال آمن (نفس السرعة)', 15, vec2(ui.getCursorX(), ui.getCursorY() - 18), rgbm(1, 1, 1, 1))
+  ui.popDWriteFont()
   
   ui.popStyleColor()
   
@@ -182,19 +181,22 @@ local function TeleportHUD()
   ui.offsetCursorY(10)
   
   -- ═══════════════════════════════════════════════════════════
-  -- STATUS
+  -- الحالة
   -- ═══════════════════════════════════════════════════════════
-  ui.pushFont(ui.Font.Main)
-  ui.text('STATUS')
-  ui.popFont()
+  ui.pushDWriteFont('Arial;Weight=Bold')
+  ui.dwriteDrawText('الحالة', 16, vec2(10, ui.getCursorY()), rgbm(1, 1, 1, 1))
+  ui.popDWriteFont()
   
-  ui.offsetCursorY(5)
+  ui.offsetCursorY(25)
   
+  ui.pushDWriteFont('Arial')
   if not selectedCar then
-    ui.textColored('No Player Selected', rgbm(0.8, 0.5, 0.3, 1))
+    ui.dwriteDrawText('لم يتم اختيار لاعب', 14, vec2(10, ui.getCursorY()), rgbm(0.8, 0.5, 0.3, 1))
+    ui.offsetCursorY(20)
   else
     local playerName = ac.getDriverName(selectedCarIndex)
-    ui.textColored('Selected: ' .. playerName, rgbm(0.3, 1, 0.3, 1))
+    ui.dwriteDrawText('اللاعب المختار: ' .. playerName, 14, vec2(10, ui.getCursorY()), rgbm(0.3, 1, 0.3, 1))
+    ui.offsetCursorY(20)
     
     -- عرض سرعة اللاعب المختار
     local speed = selectedCar.speedKmh
@@ -208,22 +210,22 @@ local function TeleportHUD()
       speedColor = rgbm(0.5, 1, 0.5, 1) -- أخضر للسرعة المنخفضة
     end
     
-    ui.textColored(string.format('Speed: %d km/h', math.floor(speed)), speedColor)
+    ui.dwriteDrawText(string.format('السرعة: %d كم/س', math.floor(speed)), 14, vec2(10, ui.getCursorY()), speedColor)
+    ui.offsetCursorY(20)
   end
-  
-  ui.offsetCursorY(5)
   
   if isCollisionDisabled then
     local timeLeft = math.max(0, 10 - (os.clock() - collisionDisabledTime))
     if timeLeft > 0 then
-      ui.textColored(string.format('Collision Disabled (%d Seconds)', math.ceil(timeLeft)), rgbm(1, 0.9, 0.3, 1))
+      ui.dwriteDrawText(string.format('التصادم معطل (%d ثانية)', math.ceil(timeLeft)), 14, vec2(10, ui.getCursorY()), rgbm(1, 0.9, 0.3, 1))
     else
       isCollisionDisabled = false
-      ui.textColored('Collision Disabled (10 Seconds)', rgbm(0.5, 0.5, 0.5, 1))
+      ui.dwriteDrawText('التصادم معطل (10 ثواني)', 14, vec2(10, ui.getCursorY()), rgbm(0.5, 0.5, 0.5, 1))
     end
   else
-    ui.textColored('Collision Disabled (10 Seconds)', rgbm(0.5, 0.5, 0.5, 1))
+    ui.dwriteDrawText('التصادم معطل (10 ثواني)', 14, vec2(10, ui.getCursorY()), rgbm(0.5, 0.5, 0.5, 1))
   end
+  ui.popDWriteFont()
 end
 
 local function TeleportHUDClosed(okClicked)
