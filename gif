@@ -269,7 +269,7 @@ end
 ui.registerOnlineExtra(
   ui.Icons.FastForward, 
   'Teleport Player', 
-  nil, 
+  '',
   TeleportHUD, 
   TeleportHUDClosed,
   ui.OnlineExtraFlags.Admin
