@@ -74,19 +74,19 @@ local function TeleportHUD()
   ui.popFont()
   
   -- ═══════════════════════════════════════════════════════════
-  -- النص العربي بدون عكس باستخدام DWrite
+  -- النص العربي بخط عريض وحديث
   -- ═══════════════════════════════════════════════════════════
   local availableWidth = ui.availableSpaceX()
-  local arabicMessage = "مرحباً بك في نظام الانتقال السريع" -- ✅ اكتب عادي بدون عكس!
+  local arabicMessage = "الانتقال إلى اللاعبين"
   
-  ui.pushDWriteFont('Segoe UI')
+  ui.pushDWriteFont('Arial;Weight=Bold') -- خط عريض عربي واضح
   ui.beginOutline()
-  local textSize = ui.measureDWriteText(arabicMessage, 18)
-  ui.dwriteDrawText(arabicMessage, 18, vec2((availableWidth - textSize.x) / 2, ui.getCursorY()), rgbm(1, 0.8, 0.3, 1))
+  local textSize = ui.measureDWriteText(arabicMessage, 16)
+  ui.dwriteDrawText(arabicMessage, 16, vec2((availableWidth - textSize.x) / 2, ui.getCursorY()), rgbm(0.7, 0.7, 0.8, 1))
   ui.endOutline(rgbm(0, 0, 0, 1), 0.5)
   ui.popDWriteFont()
   
-  ui.offsetCursorY(25)
+  ui.offsetCursorY(20)
   
   ui.pushFont(ui.Font.Small)
   ui.textColored('Player Teleport', rgbm(0.6, 0.6, 0.7, 1))
