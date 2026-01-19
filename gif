@@ -80,7 +80,7 @@ local function TeleportHUD()
   ui.dwriteDrawText('قائمة اللاعبين', 16, vec2(10, ui.getCursorY()), rgbm(1, 1, 1, 1))
   ui.popDWriteFont()
   
-  ui.offsetCursorY(25)
+  ui.offsetCursorY(30)
   
   -- Collect all players
   local players = {}
@@ -94,7 +94,7 @@ local function TeleportHUD()
   end
   
   -- Draw player list with scroll
-  ui.childWindow('playersList', vec2(ui.availableSpaceX(), 120), true, function()
+  ui.childWindow('playersList', vec2(ui.availableSpaceX(), 180), true, function()
     for idx, player in ipairs(players) do
       local isSelected = selectedCarIndex == player.index
       
@@ -108,12 +108,13 @@ local function TeleportHUD()
         ui.pushStyleColor(ui.StyleColor.ButtonActive, rgbm(0.25, 0.25, 0.35, 1))
       end
       
-      if ui.button(player.name .. '##player' .. idx, vec2(ui.availableSpaceX(), 30)) then
+      if ui.button(player.name .. '##player' .. idx, vec2(ui.availableSpaceX(), 35)) then
         selectedCar = player.car
         selectedCarIndex = player.index
       end
       
       ui.popStyleColor(3)
+      ui.offsetCursorY(3)
     end
   end)
   
@@ -121,10 +122,10 @@ local function TeleportHUD()
     ui.pushDWriteFont('Arial')
     ui.dwriteDrawText('لا يوجد لاعبين', 14, vec2(10, ui.getCursorY()), rgbm(0.7, 0.3, 0.3, 1))
     ui.popDWriteFont()
-    ui.offsetCursorY(20)
+    ui.offsetCursorY(25)
   end
   
-  ui.offsetCursorY(15)
+  ui.offsetCursorY(20)
   ui.separator()
   ui.offsetCursorY(10)
   
@@ -135,7 +136,7 @@ local function TeleportHUD()
   ui.dwriteDrawText('وضع الانتقال', 16, vec2(10, ui.getCursorY()), rgbm(1, 1, 1, 1))
   ui.popDWriteFont()
   
-  ui.offsetCursorY(25)
+  ui.offsetCursorY(30)
   
   ui.pushStyleColor(ui.StyleColor.CheckMark, rgbm(0.3, 0.8, 1, 1))
   
@@ -147,7 +148,7 @@ local function TeleportHUD()
   ui.dwriteDrawText('انتقال فوري', 15, vec2(ui.getCursorX(), ui.getCursorY() - 18), rgbm(1, 1, 1, 1))
   ui.popDWriteFont()
   
-  ui.offsetCursorY(25)
+  ui.offsetCursorY(10)
   
   ui.pushDWriteFont('Arial')
   if ui.radioButton('##teleport2', teleportMode == 2) then
@@ -170,7 +171,7 @@ local function TeleportHUD()
   ui.dwriteDrawText('الحالة', 16, vec2(10, ui.getCursorY()), rgbm(1, 1, 1, 1))
   ui.popDWriteFont()
   
-  ui.offsetCursorY(25)
+  ui.offsetCursorY(30)
   
   ui.pushDWriteFont('Arial')
   if not selectedCar then
@@ -225,7 +226,7 @@ local function TeleportHUD()
   ui.pushStyleColor(ui.StyleColor.ButtonActive, rgbm(0.15, 0.6, 0.25, 1))
   
   ui.pushDWriteFont('Arial;Weight=Bold')
-  local okClicked = ui.button('موافق', vec2(buttonWidth, 35))
+  local okClicked = ui.button('OK', vec2(buttonWidth, 35))
   ui.popDWriteFont()
   ui.popStyleColor(3)
   
@@ -237,7 +238,7 @@ local function TeleportHUD()
   ui.pushStyleColor(ui.StyleColor.ButtonActive, rgbm(0.6, 0.15, 0.15, 1))
   
   ui.pushDWriteFont('Arial;Weight=Bold')
-  local cancelClicked = ui.button('إلغاء', vec2(buttonWidth, 35))
+  local cancelClicked = ui.button('Cancel', vec2(buttonWidth, 35))
   ui.popDWriteFont()
   ui.popStyleColor(3)
   
