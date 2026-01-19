@@ -14,8 +14,8 @@ local collisionDisabledTime = 0
 local bannerImage = nil
 local imageLoading = false
 local imageLoaded = false
-local imageWidth = 350
-local imageHeight = 150
+local imageWidth = 300
+local imageHeight = 120
 local imageUrl = 'https://g.top4top.io/p_367151kwf1.png'
 
 if not imageLoading and not imageLoaded then
@@ -47,11 +47,11 @@ local function TeleportHUD()
     local centerX = (availableWidth - imageWidth) / 2
     ui.setCursorX(centerX)
     ui.image(bannerImage, vec2(imageWidth, imageHeight))
-    ui.offsetCursorY(15)
+    ui.offsetCursorY(8)
   end
   
   ui.separator()
-  ui.offsetCursorY(10)
+  ui.offsetCursorY(8)
   
   -- ═══════════════════════════════════════════════════════════
   -- العنوان
@@ -60,22 +60,22 @@ local function TeleportHUD()
   ui.pushDWriteFont('Arial;Weight=Bold')
   ui.beginOutline()
   local titleText = "نظام الانتقال إلى اللاعبين"
-  local titleSize = ui.measureDWriteText(titleText, 22)
-  ui.dwriteDrawText(titleText, 22, vec2((availableWidth - titleSize.x) / 2, ui.getCursorY()), rgbm(1, 1, 1, 1))
+  local titleSize = ui.measureDWriteText(titleText, 18)
+  ui.dwriteDrawText(titleText, 18, vec2((availableWidth - titleSize.x) / 2, ui.getCursorY()), rgbm(1, 1, 1, 1))
   ui.endOutline(rgbm(0, 0, 0, 1), 0.8)
   ui.popDWriteFont()
   
-  ui.offsetCursorY(30)
+  ui.offsetCursorY(20)
   ui.separator()
-  ui.offsetCursorY(15)
+  ui.offsetCursorY(8)
   
   -- ═══════════════════════════════════════════════════════════
   -- قائمة اللاعبين
   -- ═══════════════════════════════════════════════════════════
   ui.pushDWriteFont('Arial;Weight=Bold')
-  ui.dwriteDrawText('اختر السيارة للانتقال إليها:', 16, vec2(10, ui.getCursorY()), rgbm(1, 1, 1, 1))
+  ui.dwriteDrawText('اختر السيارة للانتقال إليها:', 13, vec2(10, ui.getCursorY()), rgbm(1, 1, 1, 1))
   ui.popDWriteFont()
-  ui.offsetCursorY(30)
+  ui.offsetCursorY(18)
   
   -- جمع اللاعبين
   local players = {}
@@ -87,47 +87,44 @@ local function TeleportHUD()
     end
   end
   
-  -- عرض القائمة بأسلوب Empire
-  ui.pushDWriteFont('Consolas;Weight=Bold')
+  -- عرض القائمة
+  ui.pushDWriteFont('Consolas')
   if #players == 0 then
-    ui.dwriteDrawText('لا يوجد لاعبين متصلين', 15, vec2(10, ui.getCursorY()), rgbm(0.7, 0.3, 0.3, 1))
-    ui.offsetCursorY(25)
+    ui.dwriteDrawText('لم يتم اختيار لاعب', 12, vec2(10, ui.getCursorY()), rgbm(0.8, 0.5, 0.3, 1))
+    ui.offsetCursorY(18)
   else
     for idx, player in ipairs(players) do
       local isSelected = selectedCarIndex == player.index
       local cursorY = ui.getCursorY()
       
-      -- خلفية الصف عند التحديد أو التحويم
-      local rowHeight = 28
+      -- خلفية الصف عند التحديد
+      local rowHeight = 22
       local rowWidth = ui.availableSpaceX()
       
       if isSelected then
         ui.drawRectFilled(
-          vec2(5, cursorY - 2), 
-          vec2(rowWidth - 5, cursorY + rowHeight - 2), 
-          rgbm(0.2, 0.5, 0.8, 0.3), 
-          3
+          vec2(8, cursorY - 1), 
+          vec2(rowWidth - 8, cursorY + rowHeight - 1), 
+          rgbm(0.2, 0.5, 0.8, 0.35), 
+          2
         )
       end
       
-      -- رسم اسم اللاعب بأسلوب واضح
-      local playerText = player.name
+      -- رسم اسم اللاعب
       local textColor = isSelected and rgbm(0.3, 0.8, 1, 1) or rgbm(0.9, 0.9, 0.9, 1)
-      
-      ui.setCursor(vec2(20, cursorY + 5))
-      ui.dwriteDrawText(playerText, 16, vec2(20, cursorY + 5), textColor)
+      ui.dwriteDrawText(player.name, 13, vec2(15, cursorY + 4), textColor)
       
       -- منطقة قابلة للنقر
-      ui.setCursor(vec2(5, cursorY))
-      ui.invisibleButton('player_' .. idx, vec2(rowWidth - 10, rowHeight))
+      ui.setCursor(vec2(8, cursorY))
+      ui.invisibleButton('player_' .. idx, vec2(rowWidth - 16, rowHeight))
       
       if ui.itemHovered() then
         ui.drawRect(
-          vec2(5, cursorY - 2), 
-          vec2(rowWidth - 5, cursorY + rowHeight - 2), 
-          rgbm(0.5, 0.5, 0.5, 0.5), 
-          3, 
-          1.5
+          vec2(8, cursorY - 1), 
+          vec2(rowWidth - 8, cursorY + rowHeight - 1), 
+          rgbm(0.5, 0.5, 0.5, 0.4), 
+          2, 
+          1
         )
         if ui.mouseClicked() then
           selectedCar = player.car
@@ -140,9 +137,7 @@ local function TeleportHUD()
   end
   ui.popDWriteFont()
   
-  ui.offsetCursorY(10)
-  ui.separator()
-  ui.offsetCursorY(15)
+  ui.offsetCursorY(5)
   
   -- ═══════════════════════════════════════════════════════════
   -- معلومات اللاعب المحدد
@@ -150,8 +145,6 @@ local function TeleportHUD()
   if selectedCar then
     local playerName = ac.getDriverName(selectedCarIndex)
     ui.pushDWriteFont('Arial')
-    ui.dwriteDrawText('اللاعب المختار: ' .. playerName, 14, vec2(10, ui.getCursorY()), rgbm(0.3, 1, 0.3, 1))
-    ui.offsetCursorY(20)
     
     local speed = selectedCar.speedKmh
     local speedColor = rgbm(0.5, 1, 0.5, 1)
@@ -161,41 +154,33 @@ local function TeleportHUD()
       speedColor = rgbm(1, 0.8, 0.3, 1)
     end
     
-    ui.dwriteDrawText(string.format('السرعة: %d كم/س', math.floor(speed)), 14, vec2(10, ui.getCursorY()), speedColor)
-    ui.offsetCursorY(20)
+    ui.dwriteDrawText(string.format('اللاعب: %s  |  السرعة: %d كم/س', playerName, math.floor(speed)), 11, vec2(10, ui.getCursorY()), speedColor)
+    ui.offsetCursorY(16)
     ui.popDWriteFont()
-    
-    ui.separator()
-    ui.offsetCursorY(10)
-  else
-    ui.pushDWriteFont('Arial')
-    ui.dwriteDrawText('لم يتم اختيار لاعب', 14, vec2(10, ui.getCursorY()), rgbm(0.8, 0.5, 0.3, 1))
-    ui.offsetCursorY(20)
-    ui.popDWriteFont()
-    
-    ui.separator()
-    ui.offsetCursorY(10)
   end
   
   if isCollisionDisabled then
     local timeLeft = math.max(0, 10 - (os.clock() - collisionDisabledTime))
     if timeLeft > 0 then
       ui.pushDWriteFont('Arial')
-      ui.dwriteDrawText(string.format('التصادم معطل لمدة %d ثانية', math.ceil(timeLeft)), 14, vec2(10, ui.getCursorY()), rgbm(1, 0.9, 0.3, 1))
+      ui.dwriteDrawText(string.format('التصادم معطل (%d ث)', math.ceil(timeLeft)), 11, vec2(10, ui.getCursorY()), rgbm(1, 0.9, 0.3, 1))
       ui.popDWriteFont()
-      ui.offsetCursorY(20)
+      ui.offsetCursorY(16)
     else
       isCollisionDisabled = false
     end
   end
   
+  ui.separator()
+  ui.offsetCursorY(8)
+  
   -- ═══════════════════════════════════════════════════════════
   -- وضع الانتقال
   -- ═══════════════════════════════════════════════════════════
   ui.pushDWriteFont('Arial;Weight=Bold')
-  ui.dwriteDrawText('اختر وضع الانتقال:', 16, vec2(10, ui.getCursorY()), rgbm(1, 1, 1, 1))
+  ui.dwriteDrawText('اختر وضع الانتقال:', 13, vec2(10, ui.getCursorY()), rgbm(1, 1, 1, 1))
   ui.popDWriteFont()
-  ui.offsetCursorY(25)
+  ui.offsetCursorY(15)
   
   ui.pushStyleColor(ui.StyleColor.CheckMark, rgbm(0.3, 0.8, 1, 1))
   ui.pushStyleColor(ui.StyleColor.FrameBg, rgbm(0.2, 0.2, 0.25, 1))
@@ -206,38 +191,38 @@ local function TeleportHUD()
   if ui.radioButton('##instant', teleportMode == 1) then
     teleportMode = 1
   end
-  ui.sameLine(0, 10)
+  ui.sameLine(0, 8)
   ui.pushDWriteFont('Arial')
-  ui.setCursorY(ui.getCursorY() + 2)
-  ui.dwriteDrawText('انتقال فوري', 15, vec2(ui.getCursorX(), ui.getCursorY()), rgbm(1, 1, 1, 1))
+  ui.setCursorY(ui.getCursorY() + 1)
+  ui.dwriteDrawText('انتقال فوري', 12, vec2(ui.getCursorX(), ui.getCursorY()), rgbm(1, 1, 1, 1))
   ui.popDWriteFont()
   ui.endGroup()
   
-  ui.dummy(vec2(0, 8))
+  ui.dummy(vec2(0, 5))
   
   -- خيار انتقال آمن
   ui.beginGroup()
   if ui.radioButton('##safe', teleportMode == 2) then
     teleportMode = 2
   end
-  ui.sameLine(0, 10)
+  ui.sameLine(0, 8)
   ui.pushDWriteFont('Arial')
-  ui.setCursorY(ui.getCursorY() + 2)
-  ui.dwriteDrawText('انتقال آمن (نفس السرعة)', 15, vec2(ui.getCursorX(), ui.getCursorY()), rgbm(1, 1, 1, 1))
+  ui.setCursorY(ui.getCursorY() + 1)
+  ui.dwriteDrawText('انتقال آمن (نفس السرعة)', 12, vec2(ui.getCursorX(), ui.getCursorY()), rgbm(1, 1, 1, 1))
   ui.popDWriteFont()
   ui.endGroup()
   
   ui.popStyleColor(3)
   
-  ui.offsetCursorY(15)
+  ui.offsetCursorY(10)
+  ui.separator()
+  ui.offsetCursorY(6)
   
   -- ═══════════════════════════════════════════════════════════
   -- ملاحظة
   -- ═══════════════════════════════════════════════════════════
-  ui.separator()
-  ui.offsetCursorY(10)
   ui.pushDWriteFont('Arial;Style=Italic')
-  ui.dwriteDrawText('نصيحة: اختر لاعب أولاً، ثم اضغط على OK', 13, vec2(10, ui.getCursorY()), rgbm(1, 1, 0.3, 1))
+  ui.dwriteDrawText('اختر لاعب أولاً، ثم اضغط على OK', 11, vec2(10, ui.getCursorY()), rgbm(1, 1, 0.3, 1))
   ui.popDWriteFont()
 end
 
