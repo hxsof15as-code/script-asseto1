@@ -18,7 +18,7 @@ local imageWidth = 350
 local imageHeight = 150
 
 -- ضع رابط صورتك هنا
-local imageUrl = 'https://media2.giphy.com/media/v1.Y2lkPTc5MGI3NjExZGx1Zm9sdGNpcXRyY2Jza3oyd2VzbjI0YnduenlxeDFlNGQ4NmkxZiZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/jM6nZYXVqZA3jvZNGX/giphy.gif'
+local imageUrl = 'https://g.top4top.io/p_367151kwf1.png'
 
 -- تحميل الصورة من الرابط
 if not imageLoading and not imageLoaded then
@@ -61,22 +61,24 @@ local function TeleportHUD()
     local centerX = (availableWidth - imageWidth) / 2
     ui.setCursorX(centerX)
     ui.image(bannerImage, vec2(imageWidth, imageHeight))
-    ui.offsetCursorY(10)
-    
-    -- ═══ النص العربي تحت الصورة ═══
-    -- ضع النص العربي هنا (سيتم عكسه تلقائياً)
-    local arabicMessage = arabicText("مرحباً بك في نظام الانتقال السريع")
-    
-    ui.pushFont(ui.Font.Main)
-    local textWidth = ui.measureText(arabicMessage).x
-    ui.setCursorX((availableWidth - textWidth) / 2)
-    ui.textColored(arabicMessage, rgbm(0.3, 0.8, 1, 1))
-    ui.popFont()
-    
     ui.offsetCursorY(15)
     ui.separator()
     ui.offsetCursorY(10)
   end
+  
+  -- ═══════════════════════════════════════════════════════════
+  -- النص العربي (يظهر دائماً حتى لو الصورة ما حُملت)
+  -- ═══════════════════════════════════════════════════════════
+  local availableWidth = ui.availableSpaceX()
+  local arabicMessage = arabicText("مرحباً بك في نظام الانتقال السريع")
+  
+  ui.pushFont(ui.Font.Title)
+  local textWidth = ui.measureText(arabicMessage).x
+  ui.setCursorX((availableWidth - textWidth) / 2)
+  ui.textColored(arabicMessage, rgbm(0.3, 0.8, 1, 1))
+  ui.popFont()
+  
+  ui.offsetCursorY(10)
   
   -- ═══════════════════════════════════════════════════════════
   -- HEADER
