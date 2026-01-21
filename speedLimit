@@ -1,5 +1,5 @@
-local speedLimit = 270
-local margin = 10
+local speedLimit = 280
+local margin = 8
 local forceFactor = 0.01
 
 local function setSpeedLimit()
