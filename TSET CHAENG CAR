@@ -13,17 +13,24 @@ _local = {
 
 local contentCarsFolder = ac.getFolder(ac.FolderID.ContentCars)
 
+-- Debug: print the path
+ac.debug('Content cars folder: ' .. contentCarsFolder)
+
 -- Read all available cars
 local carFolders = io.scanDir(contentCarsFolder, '*')
+ac.debug('Found folders: ' .. #carFolders)
+
 for i = 1, #carFolders do
     local carFolder = carFolders[i]
     local carPath = contentCarsFolder .. '/' .. carFolder
     -- Check if it's a valid car folder (has data folder)
     if io.dirExists(carPath .. '/data') then
         table.insert(_local.availableCars, carFolder)
+        ac.debug('Added car: ' .. carFolder)
     end
 end
 
+ac.debug('Total cars loaded: ' .. #_local.availableCars)
 table.sort(_local.availableCars)
 
 -- Read skins for specific car
@@ -144,6 +151,10 @@ local function windowUI()
         ui.childWindow('carsList', vec2(ui.availableSpaceX(), ui.availableSpaceY() - 60), function()
             if #_local.availableCars == 0 then
                 ui.text('No cars found in content/cars folder')
+                ui.text('Path: ' .. contentCarsFolder)
+                ui.separator()
+                ui.text('Debug Info:')
+                ui.text('Check AC console (Home button) for details')
             else
                 for _, carID in ipairs(_local.availableCars) do
                     local isSelected = (carID == _local.currentCarID)
