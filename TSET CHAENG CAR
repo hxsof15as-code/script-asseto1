@@ -11,28 +11,44 @@ _local = {
     showSkinSelection = false
 }
 
--- قراءة جميع السيارات المتوفرة
-local contentCarsFolder = ac.getFolder(ac.FolderID.ContentCars)
-for _, carFolder in ipairs(io.scanDir(contentCarsFolder, '*')) do
-    if io.dirExists(contentCarsFolder .. '/' .. carFolder) then
-        table.insert(_local.availableCars, carFolder)
+-- Read all available cars from entry list
+local function loadAvailableCars()
+    _local.availableCars = {}
+    local carsCount = ac.getCarsCount()
+    local addedCars = {}
+    
+    for i = 0, carsCount - 1 do
+        local carID = ac.getCarID(i)
+        if carID and not addedCars[carID] then
+            table.insert(_local.availableCars, carID)
+            addedCars[carID] = true
+        end
     end
+    
+    table.sort(_local.availableCars)
 end
 
--- قراءة سكنات سيارة معينة
+loadAvailableCars()
+
+-- Load skins for specific car
 local function loadCarSkins(carID)
     _local.selectedCarSkins = {}
+    local contentCarsFolder = ac.getFolder(ac.FolderID.ContentCars)
     local skinsPath = contentCarsFolder .. '/' .. carID .. '/skins'
+    
     if io.dirExists(skinsPath) then
         for _, skinFolder in ipairs(io.scanDir(skinsPath, '*')) do
-            if io.dirExists(skinsPath .. '/' .. skinFolder) then
+            local fullPath = skinsPath .. '/' .. skinFolder
+            if io.dirExists(fullPath) then
                 table.insert(_local.selectedCarSkins, skinFolder)
             end
         end
     end
+    
+    table.sort(_local.selectedCarSkins)
 end
 
--- مزامنة تغيير السيارة والسكن
+-- Sync car and skin change
 local syncCarChange = ac.OnlineEvent(
 { 
     newCar = ac.StructItem.string(100),
@@ -48,117 +64,146 @@ function applyCarAndSkinChange(newCarID, newSkinID, carIndex)
     local targetCar = ac.getCar(carIndex)
     if targetCar == nil then return end
     
-    -- حفظ معلومات السيارة
+    local contentCarsFolder = ac.getFolder(ac.FolderID.ContentCars)
+    
+    -- Save car state
     local carPos = targetCar.position
     local carDir = targetCar.look
     local carVelocity = targetCar.velocity
     
-    -- تغيير السيارة والسكن
+    -- Change car model if different
     if newCarID ~= ac.getCarID(carIndex) then
         physics.setCarModel(carIndex, newCarID)
         physics.setCarPosition(carIndex, carPos, carDir)
         physics.setCarVelocity(carIndex, carVelocity)
     end
     
-    -- تطبيق السكن
+    -- Apply skin
     local carNode = ac.findNodes('carRoot:'..carIndex)
-    carNode:resetSkin()
-    
-    local skinPath = contentCarsFolder .. '/' .. newCarID .. '/skins/' .. newSkinID
-    if io.dirExists(skinPath) then
-        local skinFiles = io.scanDir(skinPath, '*')
-        local theSkin = {}
-        for _, file in ipairs(skinFiles) do
-            theSkin[file] = skinPath .. '/' .. file
+    if carNode then
+        carNode:resetSkin()
+        
+        local skinPath = contentCarsFolder .. '/' .. newCarID .. '/skins/' .. newSkinID
+        if io.dirExists(skinPath) then
+            local skinFiles = io.scanDir(skinPath, '*')
+            if skinFiles and #skinFiles > 0 then
+                local theSkin = {}
+                for _, file in ipairs(skinFiles) do
+                    theSkin[file] = skinPath .. '/' .. file
+                end
+                carNode:applySkin(theSkin)
+            end
         end
-        carNode:applySkin(theSkin)
     end
     
     ac.debug('Car changed to: ' .. newCarID .. ' with skin: ' .. newSkinID)
 end
 
 local function windowUI()
-    ui.text('السيارة: ' .. _local.currentCar)
+    -- Header
+    ui.text('Current Car: ' .. _local.currentCar)
     ui.sameLine()
-    ui.text('| السكن: ' .. _local.currentSkin)
+    ui.offsetCursorX(10)
+    ui.text('| Skin: ' .. _local.currentSkin)
     ui.separator()
     
     if not _local.showSkinSelection then
-        -- عرض قائمة السيارات
-        ui.text('اختر سيارة:')
-        ui.childWindow('carsList', vec2(ui.availableSpaceX(), ui.availableSpaceY() - 50), function()
-            for _, carID in ipairs(_local.availableCars) do
-                local isSelected = (carID == _local.currentCar)
-                
-                if isSelected then
-                    ui.pushStyleColor(ui.StyleColor.Header, rgbm(0.2, 0.6, 0.2, 1))
-                end
-                
-                if ui.selectable(carID, isSelected) then
-                    _local.selectedCar = carID
-                    loadCarSkins(carID)
-                    _local.showSkinSelection = true
-                end
-                
-                if isSelected then
-                    ui.popStyleColor()
-                end
-                
-                if ui.itemHovered() then
-                    ui.tooltip(function()
-                        local previewPath = contentCarsFolder .. '/' .. carID .. '/ui/badge.png'
-                        if io.fileExists(previewPath) then
-                            ui.image(previewPath, vec2(128, 128))
-                        end
-                    end)
+        -- Car selection list
+        ui.text('Select a car:')
+        ui.separator()
+        
+        ui.childWindow('carsList', vec2(ui.availableSpaceX(), ui.availableSpaceY() - 60), function()
+            if #_local.availableCars == 0 then
+                ui.text('No cars found. Loading...')
+                loadAvailableCars()
+            else
+                for _, carID in ipairs(_local.availableCars) do
+                    local isSelected = (carID == _local.currentCar)
+                    
+                    if isSelected then
+                        ui.pushStyleColor(ui.StyleColor.Header, rgbm(0.2, 0.6, 0.2, 1))
+                    end
+                    
+                    if ui.selectable(carID, isSelected) then
+                        _local.selectedCar = carID
+                        loadCarSkins(carID)
+                        _local.showSkinSelection = true
+                    end
+                    
+                    if isSelected then
+                        ui.popStyleColor()
+                    end
+                    
+                    -- Show preview on hover
+                    if ui.itemHovered() then
+                        ui.tooltip(function()
+                            local contentCarsFolder = ac.getFolder(ac.FolderID.ContentCars)
+                            local previewPath = contentCarsFolder .. '/' .. carID .. '/ui/badge.png'
+                            if io.fileExists(previewPath) then
+                                ui.image(previewPath, vec2(128, 128))
+                            else
+                                ui.text('No preview available')
+                            end
+                            ui.text('Car ID: ' .. carID)
+                        end)
+                    end
                 end
             end
         end)
         
         ui.separator()
-        ui.text('💡 اختر السيارة ثم اختر السكن')
+        ui.textWrapped('Click on a car to select it, then choose a skin')
         
     else
-        -- عرض قائمة السكنات للسيارة المختارة
-        ui.text('اختر سكن لـ: ' .. _local.selectedCar)
+        -- Skin selection list
+        ui.text('Select skin for: ' .. _local.selectedCar)
         
-        if ui.button('< رجوع للسيارات', vec2(150, 30)) then
+        if ui.button('< Back to Cars', vec2(150, 30)) then
             _local.showSkinSelection = false
         end
         
-        ui.childWindow('skinsList', vec2(ui.availableSpaceX(), ui.availableSpaceY() - 50), function()
-            for _, skinID in ipairs(_local.selectedCarSkins) do
-                if ui.selectable(skinID, false) then
-                    -- تطبيق التغيير
-                    applyCarAndSkinChange(_local.selectedCar, skinID, _local.car.index)
+        ui.separator()
+        
+        ui.childWindow('skinsList', vec2(ui.availableSpaceX(), ui.availableSpaceY() - 60), function()
+            if #_local.selectedCarSkins == 0 then
+                ui.text('No skins found for this car')
+            else
+                for _, skinID in ipairs(_local.selectedCarSkins) do
+                    if ui.selectable(skinID, false) then
+                        -- Apply changes
+                        applyCarAndSkinChange(_local.selectedCar, skinID, _local.car.index)
+                        
+                        -- Sync with other players
+                        syncCarChange({
+                            newCar = _local.selectedCar,
+                            newSkin = skinID,
+                            playerIndex = _local.car.index
+                        }, true)
+                        
+                        _local.currentCar = _local.selectedCar
+                        _local.currentSkin = skinID
+                        _local.showSkinSelection = false
+                    end
                     
-                    -- مزامنة مع اللاعبين
-                    syncCarChange({
-                        newCar = _local.selectedCar,
-                        newSkin = skinID,
-                        playerIndex = _local.car.index
-                    }, true)
-                    
-                    _local.currentCar = _local.selectedCar
-                    _local.currentSkin = skinID
-                    _local.showSkinSelection = false
-                end
-                
-                if ui.itemHovered() then
-                    ui.tooltip(function()
-                        local previewPath = contentCarsFolder .. '/' .. _local.selectedCar .. '/skins/' .. skinID .. '/preview.jpg'
-                        if io.fileExists(previewPath) then
-                            ui.image(previewPath, vec2(256, 144))
-                        else
-                            ui.text('لا توجد معاينة')
-                        end
-                    end)
+                    -- Show preview on hover
+                    if ui.itemHovered() then
+                        ui.tooltip(function()
+                            local contentCarsFolder = ac.getFolder(ac.FolderID.ContentCars)
+                            local previewPath = contentCarsFolder .. '/' .. _local.selectedCar .. '/skins/' .. skinID .. '/preview.jpg'
+                            if io.fileExists(previewPath) then
+                                ui.image(previewPath, vec2(256, 144))
+                            else
+                                ui.text('No preview available')
+                            end
+                            ui.text('Skin: ' .. skinID)
+                        end)
+                    end
                 end
             end
         end)
         
         ui.separator()
-        ui.text('💡 اضغط على السكن للتطبيق')
+        ui.textWrapped('Click on a skin to apply it')
     end
 end
 
@@ -166,4 +211,4 @@ local function onWindowUIClose(okClicked)
     _local.showSkinSelection = false
 end
 
-ui.registerOnlineExtra(WINDOW_ICON, WINDOW_TITLE, nil, windowUI, onWindowUIClose, nil, nil, vec2(450, 550));
+ui.registerOnlineExtra(WINDOW_ICON, WINDOW_TITLE, nil, windowUI, onWindowUIClose, nil, nil, vec2(450, 600));
