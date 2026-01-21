@@ -13,7 +13,7 @@ local imageLoading = false
 local imageLoaded = false
 local imageWidth = 450
 local imageHeight = 180
-local imageUrl = 'https://g.top4top.io/p_367151kwf1.png'
+local imageUrl = 'https://i.imgur.com/ERp1c1u.png'
 
 if not imageLoading and not imageLoaded then
   imageLoading = true
