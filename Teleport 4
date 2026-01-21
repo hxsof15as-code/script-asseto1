@@ -4,7 +4,7 @@ local selectedCarIndex = nil
 local teleportMode = 1
 local disabledCollision = false
 local teleportTimer = 0
-local collisionDuration = 10
+local collisionDuration = 35
 local isCollisionDisabled = false
 local collisionDisabledTime = 0
 
