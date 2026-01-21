@@ -14,13 +14,15 @@ _local = {
 local contentCarsFolder = ac.getFolder(ac.FolderID.ContentCars)
 
 -- Read all available cars
-io.scanDir(contentCarsFolder, '*', function (carFolder)
+local carFolders = io.scanDir(contentCarsFolder, '*')
+for i = 1, #carFolders do
+    local carFolder = carFolders[i]
     local carPath = contentCarsFolder .. '/' .. carFolder
-    -- Check if it's a valid car folder (has data folder or kn5 file)
-    if io.dirExists(carPath .. '/data') or io.fileExists(carPath .. '/' .. carFolder .. '.kn5') then
+    -- Check if it's a valid car folder (has data folder)
+    if io.dirExists(carPath .. '/data') then
         table.insert(_local.availableCars, carFolder)
     end
-end)
+end
 
 table.sort(_local.availableCars)
 
@@ -30,12 +32,14 @@ local function loadCarSkins(carID)
     local skinsPath = contentCarsFolder .. '/' .. carID .. '/skins'
     
     if io.dirExists(skinsPath) then
-        io.scanDir(skinsPath, '*', function (skinFolder)
+        local skinFolders = io.scanDir(skinsPath, '*')
+        for i = 1, #skinFolders do
+            local skinFolder = skinFolders[i]
             local skinPath = skinsPath .. '/' .. skinFolder
             if io.dirExists(skinPath) then
                 table.insert(_local.selectedCarSkins, skinFolder)
             end
-        end)
+        end
     end
     
     table.sort(_local.selectedCarSkins)
@@ -59,9 +63,10 @@ local function getCarSkinFiles(carID, skinID)
     local skinPath = contentCarsFolder .. '/' .. carID .. '/skins/' .. skinID
     
     if io.dirExists(skinPath) then
-        io.scanDir(skinPath, '*', function(fileName)
-            table.insert(files, fileName)
-        end)
+        local skinFiles = io.scanDir(skinPath, '*')
+        for i = 1, #skinFiles do
+            table.insert(files, skinFiles[i])
+        end
     end
     
     return files
