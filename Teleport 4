@@ -7,6 +7,12 @@ local teleportTimer = 0
 local collisionDuration = 35
 local isCollisionDisabled = false
 local collisionDisabledTime = 0
+local counter = 0
+local delayTime = 8.0
+local lastPress = -delayTime
+local disabledCollision = false
+local teleportTimer = 0
+local collisionDuration = 10 -- 10 seconds no collision after teleport
 
 local bannerImage = nil
 local imageLoading = false
