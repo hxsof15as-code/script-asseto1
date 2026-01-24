@@ -10,10 +10,7 @@ local collisionDisabledTime = 0
 local counter = 0
 local delayTime = 8.0
 local lastPress = -delayTime
-local disabledCollision = false
-local teleportTimer = 0
-local collisionDuration = 10
-local targetGearToSet = nil -- متغير جديد لحفظ القير
+local targetGearToSet = nil -- متغير لحفظ القير
 
 local bannerImage = nil
 local imageLoading = false
@@ -282,25 +279,23 @@ end
 function script.update(dt)
   -- تطبيق القير المطلوب
   if targetGearToSet ~= nil then
-    local myCar = ac.getCar(0)
-    local currentGear = myCar.gear
-    
-    -- محاولة ضبط القير
-    if currentGear ~= targetGearToSet then
-      -- استخدام simulation لتغيير القير
-      if targetGearToSet > currentGear then
-        -- shift up
-        ac.sendKeyEvent(ac.KeyIndex.Up, true)
-        ac.sendKeyEvent(ac.KeyIndex.Up, false)
-      elseif targetGearToSet < currentGear then
-        -- shift down
-        ac.sendKeyEvent(ac.KeyIndex.Down, true)
-        ac.sendKeyEvent(ac.KeyIndex.Down, false)
+    local controls = ac.accessCarControls(0)
+    if controls then
+      -- تحويل رقم القير إلى requestedGearIndex:
+      -- gear 0 (R) -> -1
+      -- gear 1 (N) -> 0  
+      -- gear 2+ -> gear - 1
+      local gearIndex
+      if targetGearToSet == 0 then
+        gearIndex = -1  -- Reverse
+      elseif targetGearToSet == 1 then
+        gearIndex = 0   -- Neutral
+      else
+        gearIndex = targetGearToSet - 1  -- Regular gears
       end
       
-      ac.log(string.format("[Gear] Current: %d, Target: %d", currentGear, targetGearToSet))
-    else
-      ac.log("[Gear] Matched!")
+      controls.requestedGearIndex = gearIndex
+      ac.log(string.format("[Gear] Set requestedGearIndex to %d (gear %d)", gearIndex, targetGearToSet))
       targetGearToSet = nil
     end
   end
