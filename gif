@@ -12,7 +12,8 @@ local delayTime = 8.0
 local lastPress = -delayTime
 local disabledCollision = false
 local teleportTimer = 0
-local collisionDuration = 10 -- 10 seconds no collision after teleport
+local collisionDuration = 10
+local targetGearToSet = nil -- متغير جديد لحفظ القير
 
 local bannerImage = nil
 local imageLoading = false
@@ -42,7 +43,6 @@ if not imageLoading and not imageLoaded then
 end
 
 local function TeleportHUD()
-  -- إجبار عرض النافذة
   local windowWidth = 500
   ui.pushItemWidth(windowWidth)
   
@@ -137,7 +137,9 @@ local function TeleportHUD()
   else
     local playerName = ac.getDriverName(selectedCarIndex)
     local speed = selectedCar.speedKmh
-    local gear = selectedCar.gear -- الحصول على نمرة القير
+    local rpm = selectedCar.rpm
+    local gear = selectedCar.gear
+    
     local speedColor = rgbm(0.4, 0.9, 0.4, 1)
     if speed > 200 then
       speedColor = rgbm(1, 0.3, 0.3, 1)
@@ -145,13 +147,23 @@ local function TeleportHUD()
       speedColor = rgbm(1, 0.7, 0.3, 1)
     end
     
+    -- تحديد نص القير بشكل صحيح
+    local gearText
+    if gear == 0 then
+      gearText = "R"
+    elseif gear == 1 then
+      gearText = "N"
+    else
+      gearText = tostring(gear - 1)
+    end
+    
     ui.dwriteDrawText('اللاعب المختار: ' .. playerName, 15, vec2(35, ui.getCursorY()), rgbm(0.3, 0.9, 0.3, 1))
     ui.offsetCursorY(28)
     ui.dwriteDrawText(string.format('السرعة: %d كم/س', math.floor(speed)), 15, vec2(35, ui.getCursorY()), speedColor)
     ui.offsetCursorY(28)
-    -- عرض نمرة القير
-    local gearText = gear == 0 and "R" or (gear == 1 and "N" or tostring(gear - 1))
     ui.dwriteDrawText('القير: ' .. gearText, 15, vec2(35, ui.getCursorY()), rgbm(0.4, 0.8, 1, 1))
+    ui.offsetCursorY(28)
+    ui.dwriteDrawText(string.format('RPM: %d', math.floor(rpm)), 15, vec2(35, ui.getCursorY()), rgbm(1, 0.7, 0.3, 1))
     ui.offsetCursorY(32)
   end
   ui.popDWriteFont()
@@ -222,7 +234,6 @@ local function TeleportHUD()
   ui.popItemWidth()
 end
 
--- Event للتحكم في التصادمات مع اللاعبين الآخرين
 local disabledCollisionEvent = ac.OnlineEvent({
     ac.StructItem.key('disabledCollisionEvent'),
     disabled = ac.StructItem.boolean()
@@ -243,20 +254,17 @@ local function TeleportHUDClosed(okClicked)
     if teleportMode == 1 then
       physics.setCarVelocity(0, vec3(0, 0, 0))
       physics.setCarPosition(0, spawnPos, -dir)
+      targetGearToSet = nil
     else
       local targetVelocity = selectedCar.velocity
-      local targetGear = selectedCar.gear -- الحصول على القير
+      targetGearToSet = selectedCar.gear -- حفظ القير
       
       physics.setCarPosition(0, spawnPos, -dir)
       physics.setCarVelocity(0, targetVelocity)
       
-      -- تغيير القير لنفس قير اللاعب المستهدف
-      ac.setGear(targetGear)
-      
-      ac.log(string.format("[TeleportToPlayer] Teleported with velocity and gear %d", targetGear))
+      ac.log(string.format("[TeleportToPlayer] Will set gear to %d", targetGearToSet))
     end
     
-    -- تعطيل التصادم باستخدام الأوامر من FastTravel
     ac.log('Disabled own collisions')
     physics.disableCarCollisions(0, true)
     disabledCollisionEvent({ disabled = true })
@@ -272,6 +280,31 @@ local function TeleportHUDClosed(okClicked)
 end
 
 function script.update(dt)
+  -- تطبيق القير المطلوب
+  if targetGearToSet ~= nil then
+    local myCar = ac.getCar(0)
+    local currentGear = myCar.gear
+    
+    -- محاولة ضبط القير
+    if currentGear ~= targetGearToSet then
+      -- استخدام simulation لتغيير القير
+      if targetGearToSet > currentGear then
+        -- shift up
+        ac.sendKeyEvent(ac.KeyIndex.Up, true)
+        ac.sendKeyEvent(ac.KeyIndex.Up, false)
+      elseif targetGearToSet < currentGear then
+        -- shift down
+        ac.sendKeyEvent(ac.KeyIndex.Down, true)
+        ac.sendKeyEvent(ac.KeyIndex.Down, false)
+      end
+      
+      ac.log(string.format("[Gear] Current: %d, Target: %d", currentGear, targetGearToSet))
+    else
+      ac.log("[Gear] Matched!")
+      targetGearToSet = nil
+    end
+  end
+
   if disabledCollision then
     teleportTimer = teleportTimer + dt
 
@@ -292,7 +325,6 @@ function script.update(dt)
       end
 
       if not tooClose then
-        -- إعادة تفعيل التصادم باستخدام الأوامر من FastTravel
         ac.log('Enabled own collisions')
         physics.disableCarCollisions(0, false)
         disabledCollisionEvent({ disabled = false })
