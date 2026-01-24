@@ -4,9 +4,15 @@ local selectedCarIndex = nil
 local teleportMode = 1
 local disabledCollision = false
 local teleportTimer = 0
-local collisionDuration = 10
+local collisionDuration = 35
 local isCollisionDisabled = false
 local collisionDisabledTime = 0
+local counter = 0
+local delayTime = 8.0
+local lastPress = -delayTime
+local disabledCollision = false
+local teleportTimer = 0
+local collisionDuration = 10 -- 10 seconds no collision after teleport
 
 local bannerImage = nil
 local imageLoading = false
@@ -19,7 +25,7 @@ if not imageLoading and not imageLoaded then
   imageLoading = true
   web.get(imageUrl, function(err, response)
     if err or not response or response.status ~= 200 then
-      ac.log('[Teleport] فشل تحميل الصورة')
+      ac.log('[Teleport] false')
       imageLoading = false
     else
       local success, img = pcall(function()
@@ -28,7 +34,7 @@ if not imageLoading and not imageLoaded then
       if success and img then
         bannerImage = img
         imageLoaded = true
-        ac.log('[Teleport] تم تحميل الصورة بنجاح!')
+        ac.log('[Teleport] true')
       end
       imageLoading = false
     end
@@ -131,6 +137,7 @@ local function TeleportHUD()
   else
     local playerName = ac.getDriverName(selectedCarIndex)
     local speed = selectedCar.speedKmh
+    local gear = selectedCar.gear -- الحصول على نمرة القير
     local speedColor = rgbm(0.4, 0.9, 0.4, 1)
     if speed > 200 then
       speedColor = rgbm(1, 0.3, 0.3, 1)
@@ -141,6 +148,10 @@ local function TeleportHUD()
     ui.dwriteDrawText('اللاعب المختار: ' .. playerName, 15, vec2(35, ui.getCursorY()), rgbm(0.3, 0.9, 0.3, 1))
     ui.offsetCursorY(28)
     ui.dwriteDrawText(string.format('السرعة: %d كم/س', math.floor(speed)), 15, vec2(35, ui.getCursorY()), speedColor)
+    ui.offsetCursorY(28)
+    -- عرض نمرة القير
+    local gearText = gear == 0 and "R" or (gear == 1 and "N" or tostring(gear - 1))
+    ui.dwriteDrawText('القير: ' .. gearText, 15, vec2(35, ui.getCursorY()), rgbm(0.4, 0.8, 1, 1))
     ui.offsetCursorY(32)
   end
   ui.popDWriteFont()
@@ -193,7 +204,7 @@ local function TeleportHUD()
   ui.sameLine(0, 12)
   ui.pushDWriteFont('Arial;Weight=Bold')
   ui.setCursorY(ui.getCursorY() + 2)
-  ui.dwriteDrawText('انتقال آمن (نفس السرعة)', 14, vec2(ui.getCursorX(), ui.getCursorY()), rgbm(0.95, 0.95, 0.95, 1))
+  ui.dwriteDrawText('انتقال آمن (نفس السرعة + القير)', 14, vec2(ui.getCursorX(), ui.getCursorY()), rgbm(0.95, 0.95, 0.95, 1))
   ui.popDWriteFont()
   ui.endGroup()
   
@@ -234,8 +245,15 @@ local function TeleportHUDClosed(okClicked)
       physics.setCarPosition(0, spawnPos, -dir)
     else
       local targetVelocity = selectedCar.velocity
+      local targetGear = selectedCar.gear -- الحصول على القير
+      
       physics.setCarPosition(0, spawnPos, -dir)
       physics.setCarVelocity(0, targetVelocity)
+      
+      -- تغيير القير لنفس قير اللاعب المستهدف
+      ac.setGear(targetGear)
+      
+      ac.log(string.format("[TeleportToPlayer] Teleported with velocity and gear %d", targetGear))
     end
     
     -- تعطيل التصادم باستخدام الأوامر من FastTravel
