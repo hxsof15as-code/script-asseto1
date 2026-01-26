@@ -1,36 +1,269 @@
-local MAX_GRIP_DECREASE = 0.2;
-local MIN_GRIP_DECREASE = -100;
-
-local gripSliderValue = 0;
-local realGripValue = gripSliderValue;
-local justOpenedWindow = true;
-
-local function windowUI()
-    if (justOpenedWindow) then
-        justOpenedWindow = false;
-        gripSliderValue = realGripValue
-    end
-
-    local val, changed = ui.slider('', gripSliderValue, MIN_GRIP_DECREASE, MAX_GRIP_DECREASE, '%.3f');
-    if (changed) then
-        if (val > MAX_GRIP_DECREASE) then
-            gripSliderValue = MAX_GRIP_DECREASE
-        elseif (val < MIN_GRIP_DECREASE) then
-            gripSliderValue = MIN_GRIP_DECREASE
-        else
-            gripSliderValue = val;
-        end
-    end
+local popups = {
+	{
+		type = "content",
+        closeTimer = 10,
+		content = function()
+			-- Title: Welcome to ACS x SimHQ
+			ui.setCursor(vec2(100, 20))
+			ui.pushDWriteFont('Segoe UI;Weight=Bold;Style=Italic')
+			ui.dwriteText("", 36, rgbm(0.82, 0, 0.82, 1)) -- Title color changed to purple
+ 
+			-- First image aligned normally
+			ui.setCursor(vec2(150, 50)) -- Move to center
+			ui.drawImage("https://a.top4top.io/p_3302ifcow1.png", vec2(100, 50), vec2(480, 220)) -- First image resized
+ 
+--			ui.setCursor(vec2(300, 200)) -- Move to center
+--			ui.drawImage("https://b.top4top.io/p_3302ppnet1.png", vec2(40, 580), vec2(580, 670)) -- First image resized
+ 
+ui.setCursor(vec2(30, 230))  -- Adjusted Y position for the rules section
+ui.pushDWriteFont('Segoe UI;Weight=Bold;Style=Normal')
+ui.dwriteText("Follow Us", 16, rgbm(1, 1, 0, 1)) -- Yellow Rules title
+ 
+-- Spacing between images and hyperlinks
+ui.setCursor(vec2(30, 260))  -- Adjust the position as needed
+ui.dwriteText("Discord: ", 13, rgbm(1, 1, 1, 1))  -- Non-clickable label
+ui.sameLine()  -- Ensures the hyperlink appears on the same line
+if ui.textHyperlink("discord.gg/p-t", rgbm(1, 0, 1, 1)) then  -- Hyperlink
+    os.openURL("https://discord.gg/p-t")
 end
-
-local function onWindowUIClose(okClicked)
-    justOpenedWindow = true;
-    if (okClicked) then
-        physics.setGripDecrease(0, ac.Wheel.All, gripSliderValue);
-        realGripValue = gripSliderValue;
-    else
-        gripSliderValue = realGripValue;
-    end
+ 
+ui.setCursor(vec2(30, 280))  -- Adjust the position for the next label and hyperlink
+ui.dwriteText("Developed by: Tweety ", 13, rgbm(1, 1, 1, 1))  -- Non-clickable label
+--  ui.sameLine()  -- Ensures the hyperlink appears on the same line
+--  if ui.textHyperlink("https://instagram.com/acsdrift/", rgbm(1, 0, 1, 1)) then  -- Hyperlink
+--      os.openURL("https://instagram.com/acsdrift/")
+--  end
+ 
+ui.setCursor(vec2(140, 560))  -- Adjust the position for the next label and hyperlink
+ui.dwriteText("Welcome to Psycho Team! We wish you a great time!", 13, rgbm(1, 1, 1, 1))  -- Non-clickable label
+ui.setCursor(vec2(180, 580))  -- Adjust the position for the next label and hyperlink
+ui.dwriteText("مرحبًا بك في سايكو تيم! نتمنى لكم وقتًا ممتعًا", 13, rgbm(1, 1, 1, 1))  -- Non-clickable label 
+ 
+ui.setCursor(vec2(230, 610))  -- Continuing from where the previous text left off
+ui.dwriteText("", 13, rgbm(1, 0, 1, 1)) -- Purple highlight
+ui.sameLine()  -- Ensures the hyperlink appears on the same line
+if ui.textHyperlink("Discord Psycho Team", rgbm(1, 0, 1, 1)) then  -- Hyperlink
+    os.openURL("https://discord.gg/p-t")
 end
+ 
+-- ui.setCursor(vec2(210, 665))  -- Continuing from where the previous text left off
+-- ui.dwriteText("", 13, rgbm(0.78, 0.57, 1, 1)) -- Purple highlight
+-- ui.sameLine()  -- Ensures the hyperlink appears on the same line
+-- if ui.textHyperlink("instagram.com/sim_hq", rgbm(1, 0, 1, 1)) then  -- Hyperlink
+--    os.openURL("https://instagram.com/sim_hq")
+-- end
+ 
+ 
+-- Rules Title
+ui.setCursor(vec2(30, 320))  -- Adjusted Y position for the rules section
+ui.pushDWriteFont('Segoe UI;Weight=Bold;Style=Normal')
+ui.dwriteText("Rules", 16, rgbm(1, 1, 0, 1)) -- Yellow Rules title
+ 
+-- Rules Title Arabic
+ui.setCursor(vec2(520, 320))  -- Adjusted Y position for the rules section
+ui.pushDWriteFont('Segoe UI;Weight=Bold;Style=Normal')
+ui.dwriteText("القوانين", 16, rgbm(1, 1, 0, 1)) -- Yellow Rules title
 
-ui.registerOnlineExtra(ui.Icons.Road, 'Track grip', nil, windowUI, onWindowUIClose, nil, nil, vec2(400, 400));
+-- Rule 1
+ui.setCursor(vec2(30, 350))  -- Proper Y positioning
+ui.dwriteText("- Keep chat open at all times.", 13, rgbm(1, 1, 1, 1)) -- White text
+
+-- Rule 1 Arabic
+ui.setCursor(vec2(340, 350))  -- Proper Y positioning, adjusted X for right alignment
+ui.dwriteText(". يفضل إبقاء الشات مفتوح في جميع الأوقات -", 13, rgbm(1, 1, 1, 1)) -- Purple highlight
+
+-- Rule 2
+ui.setCursor(vec2(30, 370))
+ui.dwriteText("- Don't run into other drivers on purpose.", 13, rgbm(1, 1, 1, 1)) -- White text
+
+-- Rule 2 Arabic
+ui.setCursor(vec2(392, 370))  -- Adjust X for right alignment
+ui.dwriteText(". لا تصطدم بالسائقين الآخرين عمدًا -", 13, rgbm(1, 1, 1, 1)) -- White text
+
+-- Rule 3
+ui.setCursor(vec2(30, 390))
+ui.dwriteText("- Do not park or block the road.", 13, rgbm(1, 1, 1, 1)) -- White text
+
+-- Rule 3 Arabic
+ui.setCursor(vec2(318, 390))  -- Adjust X for right alignment
+ui.dwriteText(". لا تغلق الطريق ابتعد إلى الجانب أو عد إلى البت -", 13, rgbm(1, 1, 1, 1)) -- White text
+ 
+-- Rule 4
+ui.setCursor(vec2(30, 410))
+ui.dwriteText("- Be respectful of other drivers.", 13, rgbm(1, 1, 1, 1)) -- Purple text
+
+-- Rule 4 Arabic
+ui.setCursor(vec2(456, 410))  -- Adjust X for right alignment
+ui.dwriteText(". احترم اللاعبين الآخرين -", 13, rgbm(1, 1, 1, 1)) -- Purple highlight
+ 
+-- Rule 5
+ui.setCursor(vec2(30, 430))
+ui.dwriteText("- Don't cause drama in the chat.", 13, rgbm(1, 1, 1, 1)) -- White text
+
+-- Rule 5 Arabic
+ui.setCursor(vec2(307, 430))  -- Adjust X for right alignment
+ui.dwriteText(". تجنب إثارة المشاكل أو مضايقة اللاعبين في الشات -", 13, rgbm(1, 1, 1, 1)) -- White text
+ 
+-- Final Warning
+ui.setCursor(vec2(30, 480))
+ui.pushDWriteFont('Segoe UI;Weight=Bold;Style=Bold')
+ui.dwriteText("If you don't respect these rules, we will have to kick or ban you if excessive.", 13, rgbm(1, 0, 1, 1))
+
+-- Final Warning
+ui.setCursor(vec2(30, 500))
+ui.pushDWriteFont('Segoe UI;Weight=Bold;Style=Bold')
+ui.dwriteText("إذا لم تحترم هذه القواعد، فسوف نضطر إلى طردك أو حظرك من السيرفر" 
+,13, rgbm(1, 0, 1, 1))
+ 
+ 
+			-- Button to acknowledge
+			ui.setCursor(vec2(240, 690))
+			if ui.button("I understand ✅##mainwindow") then
+				return true
+			end
+		end,
+		pos = function(res) return res / 2 - vec2(600, 750) / 2 end, -- Adjust popup size slightly larger
+		size = vec2(600, 750), -- Adjust popup size slightly larger
+		popupInterval = 0.02,
+		closeButtonSize = 0,
+		open = true,
+	},
+}
+ 
+local function closePopup(el)
+	el.open = false
+end
+ 
+local mouse = {
+	down = false,
+	click = false,
+	up = false,
+	pos = vec2(-1, -1),
+	clickPos = vec2(-1, -1),
+	releasePos = vec2(-1, -1),
+}
+mouse.update = function()
+	mouse.pos = ui.mousePos()
+	if ui.mouseDown(ui.MouseButton.Left) then
+		if not mouse.down then
+			mouse.click = true
+			mouse.clickPos = mouse.pos
+		else
+			mouse.click = false
+		end
+		mouse.down = true
+	else
+		if mouse.down then
+			mouse.up = true
+			mouse.releasePos = mouse.pos
+		else
+			mouse.up = false
+		end
+		mouse.down = false
+	end
+end
+ 
+local function button(id, pos, size, content, color, hovercolor, tooltip, ignoreBusyMouse)
+	if tooltip then
+		if mouse.pos.x > pos.x and mouse.pos.y > pos.y and mouse.pos.x < pos:clone():add(size).x and mouse.pos.y < pos:clone():add(size).y then
+			ui.dwriteDrawText(tooltip, 14, mouse.pos + vec2(10, 10), rgbm(1, 1, 1, 1))
+		end
+	end
+	if hovercolor then
+		if mouse.pos.x > pos.x and mouse.pos.y > pos.y and mouse.pos.x < pos:clone():add(size).x and mouse.pos.y < pos:clone():add(size).y then
+			ui.drawRectFilled(pos, pos + size, hovercolor)
+		end
+	end
+	if type(content) == "string" then
+		local str = content
+		content = function()
+			ui.button(str, size)
+		end
+	end
+	if content ~= nil then
+		if color then
+			ui.drawRectFilled(pos - ui.windowPos(), pos - ui.windowPos() + size, color)
+		end
+		ui.setCursor(pos - ui.windowPos())
+		content()
+	end
+	if mouse.click and (not ignoreBusyMouse or not ui.mouseBusy()) and mouse.clickPos.x > pos.x and mouse.clickPos.y > pos.y and mouse.clickPos.x < pos:clone():add(size).x and mouse.clickPos.y < pos:clone():add(size).y then
+		return true
+	else
+		return false
+	end
+end
+ 
+local function popup(el)
+	if el.open then
+		if el.closeTimer and not el.closeTimerActive then
+			el.closeTimerActive = true
+			setTimeout(function()
+				closePopup(el)
+				el.closeTimerActive = false
+			end, el.closeTimer)
+		end
+		local resolution = ui.windowSize()
+		local windowPos = type(el.pos) == "function" and el.pos(resolution) or el.pos
+		local finalSize = type(el.size) == "function" and el.size(resolution) or el.size
+		windowPos.x = windowPos.x > 1 and windowPos.x or resolution.x * windowPos.x
+		windowPos.y = windowPos.y > 1 and windowPos.y or resolution.y * windowPos.y
+		if el.type == "image" then
+			if type(el.imageWidth) == "function" then el.imageWidth = el.imageWidth(resolution) end
+			local imageSize = ui.imageSize(el.imageUrl)
+			if el.imageWidth <= 1 then
+				finalSize = vec2(resolution.x * el.imageWidth, resolution.x * el.imageWidth * imageSize.y / imageSize.x)
+			else
+				finalSize = vec2(el.imageWidth, el.imageWidth * imageSize.y / imageSize.x)
+			end
+		elseif el.type == "content" then
+			finalSize.x = finalSize.x > 1 and finalSize.x or resolution.x * finalSize.x
+			finalSize.y = finalSize.y > 1 and finalSize.y or resolution.y * finalSize.y
+		end
+ 
+		local beginWindow = el.backgroundColor and ui.beginTransparentWindow or ui.beginToolWindow
+		local endWindow = el.backgroundColor and ui.endTransparentWindow or ui.endToolWindow
+ 
+		beginWindow("##" .. tostring(windowPos), windowPos, finalSize, true, true)
+ 
+		if el.backgroundColor then ui.drawRectFilled(vec2(0, 0), finalSize, el.backgroundColor) end
+		if el.type == "image" then ui.drawImage(el.imageUrl, vec2(0, 0), finalSize, rgbm.colors.white, vec2(0, 0), vec2(1, 1), true) end
+		if el.type == "content" then
+			ui.sameLine()
+			if el.content() then closePopup(el) end
+		end
+		if el.closeButtonSize ~= nil then
+			ui.setCursor(vec2(ui.windowWidth() - el.closeButtonSize, 0))
+			ui.icon(ui.Icons.Cancel, vec2(el.closeButtonSize, el.closeButtonSize))
+			ui.setCursor(vec2(ui.windowWidth() - el.closeButtonSize, 0))
+			if ui.button("##" .. tostring(windowPos) .. "close", vec2(el.closeButtonSize, el.closeButtonSize)) then
+				closePopup(el)
+			end
+		end
+		if el.textCloseButton ~= nil then
+			local buttonPos = vec2(el.textCloseButton.pos.x * resolution.x, el.textCloseButton.pos.y * resolution.y)
+			ui.setCursor(buttonPos)
+			if ui.button(el.textCloseButton.text, el.textCloseButton.size) then
+				closePopup(el)
+			end
+		end
+		if el.wholeWindowCloseButton or windowPos.x + finalSize.x > resolution.x or windowPos.y + finalSize.y > resolution.y or windowPos.x < 0 or windowPos.y < 0 then
+			if button("wholeWindowCloseButton" .. tostring(windowPos), windowPos, finalSize) then
+				closePopup(el)
+			end
+		end
+ 
+		endWindow()
+	end
+end
+ 
+function script.drawUI()
+	mouse.update()
+	for i, v in pairs(popups) do
+		if type(v) == "function" then
+			v = v()
+			popups[i] = v
+		end
+		popup(v)
+	end
+end
