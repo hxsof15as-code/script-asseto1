@@ -42,7 +42,7 @@ ui.dwriteText("مرحبًا بك في ابداع تيم! نتمنى لكم وق�
 ui.setCursor(vec2(230, 610))  -- Continuing from where the previous text left off
 ui.dwriteText("", 13, rgbm(1, 0, 1, 1)) -- Purple highlight
 ui.sameLine()  -- Ensures the hyperlink appears on the same line
-if ui.textHyperlink("Discord Psycho Team", rgbm(1, 0, 1, 1)) then  -- Hyperlink
+if ui.textHyperlink("Discord Ebda3 Team", rgbm(1, 0, 1, 1)) then  -- Hyperlink
     os.openURL("https://discord.gg/e-b")
 end
  
