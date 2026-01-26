@@ -10,10 +10,10 @@ local popups = {
  
 			-- First image aligned normally
 			ui.setCursor(vec2(150, 50)) -- Move to center
-			ui.drawImage("https://a.top4top.io/p_3302ifcow1.png", vec2(100, 50), vec2(480, 220)) -- First image resized
+			ui.drawImage("https://i.imgur.com/ERp1c1u.png", vec2(100, 50), vec2(480, 220)) -- First image resized
  
 --			ui.setCursor(vec2(300, 200)) -- Move to center
---			ui.drawImage("https://b.top4top.io/p_3302ppnet1.png", vec2(40, 580), vec2(580, 670)) -- First image resized
+--			ui.drawImage("hhttps://i.imgur.com/ERp1c1u.png", vec2(40, 580), vec2(580, 670)) -- First image resized
  
 ui.setCursor(vec2(30, 230))  -- Adjusted Y position for the rules section
 ui.pushDWriteFont('Segoe UI;Weight=Bold;Style=Normal')
@@ -28,7 +28,7 @@ if ui.textHyperlink("discord.gg/p-t", rgbm(1, 0, 1, 1)) then  -- Hyperlink
 end
  
 ui.setCursor(vec2(30, 280))  -- Adjust the position for the next label and hyperlink
-ui.dwriteText("Developed by: Tweety ", 13, rgbm(1, 1, 1, 1))  -- Non-clickable label
+ui.dwriteText("Developed by: 3MR ", 13, rgbm(1, 1, 1, 1))  -- Non-clickable label
 --  ui.sameLine()  -- Ensures the hyperlink appears on the same line
 --  if ui.textHyperlink("https://instagram.com/acsdrift/", rgbm(1, 0, 1, 1)) then  -- Hyperlink
 --      os.openURL("https://instagram.com/acsdrift/")
@@ -37,13 +37,13 @@ ui.dwriteText("Developed by: Tweety ", 13, rgbm(1, 1, 1, 1))  -- Non-clickable l
 ui.setCursor(vec2(140, 560))  -- Adjust the position for the next label and hyperlink
 ui.dwriteText("Welcome to Psycho Team! We wish you a great time!", 13, rgbm(1, 1, 1, 1))  -- Non-clickable label
 ui.setCursor(vec2(180, 580))  -- Adjust the position for the next label and hyperlink
-ui.dwriteText("مرحبًا بك في سايكو تيم! نتمنى لكم وقتًا ممتعًا", 13, rgbm(1, 1, 1, 1))  -- Non-clickable label 
+ui.dwriteText("مرحبًا بك في ابداع تيم! نتمنى لكم وقتًا ممتعًا", 13, rgbm(1, 1, 1, 1))  -- Non-clickable label 
  
 ui.setCursor(vec2(230, 610))  -- Continuing from where the previous text left off
 ui.dwriteText("", 13, rgbm(1, 0, 1, 1)) -- Purple highlight
 ui.sameLine()  -- Ensures the hyperlink appears on the same line
 if ui.textHyperlink("Discord Psycho Team", rgbm(1, 0, 1, 1)) then  -- Hyperlink
-    os.openURL("https://discord.gg/p-t")
+    os.openURL("https://discord.gg/e-b")
 end
  
 -- ui.setCursor(vec2(210, 665))  -- Continuing from where the previous text left off
