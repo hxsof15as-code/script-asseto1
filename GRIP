@@ -23,8 +23,8 @@ ui.dwriteText("Follow Us", 16, rgbm(1, 1, 0, 1)) -- Yellow Rules title
 ui.setCursor(vec2(30, 260))  -- Adjust the position as needed
 ui.dwriteText("Discord: ", 13, rgbm(1, 1, 1, 1))  -- Non-clickable label
 ui.sameLine()  -- Ensures the hyperlink appears on the same line
-if ui.textHyperlink("discord.gg/p-t", rgbm(1, 0, 1, 1)) then  -- Hyperlink
-    os.openURL("https://discord.gg/p-t")
+if ui.textHyperlink("discord.gg/e-b", rgbm(1, 0, 1, 1)) then  -- Hyperlink
+    os.openURL("https://discord.gg/e-b")
 end
  
 ui.setCursor(vec2(30, 280))  -- Adjust the position for the next label and hyperlink
