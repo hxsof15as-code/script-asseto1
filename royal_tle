@@ -1,6 +1,3 @@
-//3MR_TLEPORT_SPEED//
-
-
 local sim = ac.getSim()
 local selectedCar = nil ---@type ac.StateCar
 local selectedCarIndex = nil
