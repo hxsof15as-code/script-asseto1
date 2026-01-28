@@ -22,7 +22,7 @@ local imageLoading = false
 local imageLoaded = false
 local imageWidth = 450
 local imageHeight = 180
-local imageUrl = 'https://h.top4top.io/p_3680lq9k01.png'
+local imageUrl = 'https://cdn.discordapp.com/attachments/1412414593220739193/1465994702862942321/IMG_9139.PNG?ex=697b2176&is=6979cff6&hm=d7a11d9775dd0692c62e8119958e11ecf1fab9e52144ac3d7923b422c74ae5f6&'
 
 if not imageLoading and not imageLoaded then
   imageLoading = true
