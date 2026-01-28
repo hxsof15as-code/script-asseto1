@@ -20,7 +20,7 @@ local bannerImage = nil
 local imageLoading = false
 local imageLoaded = false
 local imageWidth = 450
-local imageHeight = 180
+local imageHeight = 300
 local imageUrl = 'https://k.top4top.io/p_3680xyp6j1.png'
 
 if not imageLoading and not imageLoaded then
