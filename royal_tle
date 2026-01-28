@@ -19,8 +19,8 @@ local collisionDuration = 10 -- 10 seconds no collision after teleport
 local bannerImage = nil
 local imageLoading = false
 local imageLoaded = false
-local imageWidth = 300
-local imageHeight = 300
+local imageWidth = 200
+local imageHeight = 200
 local imageUrl = 'https://b.top4top.io/p_36801hm3p1.png'
 
 if not imageLoading and not imageLoaded then
